@@ -1,0 +1,13 @@
+[package]
+name = "scene_parser"
+version = "0.1.0"
+edition = "2021"
+build = "src/build.rs"
+
+[dependencies]
+lalrpop-util = { version = "0.19.12", features = ["lexer"] }
+raytracer = { path = "../raytracer/" }
+
+[build-dependencies]
+lalrpop = "0.19.12"
+

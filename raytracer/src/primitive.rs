@@ -1,5 +1,3 @@
-use serde::{Deserialize, Serialize};
-
 use crate::{ray::Ray, vec3::Vec3, FLOAT_EPS};
 
 #[derive(Debug, Clone, PartialEq)]
@@ -11,11 +9,11 @@ pub struct Intersection {
 }
 
 pub trait Intersectable {
-    /// Check if the ray intersectes the intersectable.
+    /// Check if the ray intersects the intersectable.
     fn intersection(&self, ray: &Ray) -> Option<Intersection>;
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug)]
 pub enum Primitive {
     Sphere(Sphere),
     Triangle(Triangle),
@@ -32,8 +30,8 @@ impl Intersectable for Primitive {
     }
 }
 
-/// A infinite plane described by a point and a normal.
-#[derive(Debug, Deserialize, Serialize)]
+/// An infinite plane described by a point and a normal.
+#[derive(Debug)]
 pub struct Plane {
     point: Vec3,
     normal: Vec3,
@@ -47,7 +45,7 @@ impl Plane {
         }
     }
 
-    /// Return a plane from the cartesian equation `ax + by + cz + d = 0`.
+    /// Return a plane from the Cartesian equation `ax + by + cz + d = 0`.
     fn from_cartesian(a: f64, b: f64, c: f64, d: f64) -> Self {
         // ax + by + cz + d = 0    (x=0, y=0)
         // z = - d / c
@@ -95,7 +93,7 @@ impl Intersectable for Plane {
 /// A triangle in 3d-space.
 ///
 /// The three vectors makes up each corner of the triangle.
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug)]
 pub struct Triangle {
     pub t1: Vec3,
     pub t2: Vec3,
@@ -180,7 +178,7 @@ impl Intersectable for Triangle {
 /// A triangle in 3d-space.
 ///
 /// The three vectors makes up each corner of the triangle.
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug)]
 pub struct Sphere {
     pub center: Vec3,
     pub radius: f64,
@@ -203,7 +201,7 @@ impl Intersectable for Sphere {
         // From: <https://en.wikipedia.org/wiki/Line%E2%80%93sphere_intersection#Calculation_using_vectors_in_3D>
         // Where the direction of the ray is a unit vector.
 
-        // Sanity check. Ray should guarantee this
+        // Sanity check. Ray should guarantee this.
         debug_assert!(
             ray.direction().is_unit(),
             "Expected unit vector for ray direction. Got vector '{:?}' with length '{}'",

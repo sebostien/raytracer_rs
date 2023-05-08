@@ -1,0 +1,69 @@
+use std::str::FromStr;
+
+use crate::{Ident, SceneParseError};
+use crate::scene_builder::SceneBuilder;
+use crate::scene_object::SceneObject;
+use crate::lit::{SpannedLit, Lit};
+
+use raytracer::{Raytracer};
+
+grammar;
+
+/////////
+// Scene
+pub Scene: Result<Raytracer, Vec<SceneParseError>> = {
+  <ss:OSep<";", Object>> => SceneBuilder::build(ss),
+};
+
+//////////
+// Objects
+Object : Result<SceneObject, SceneParseError> = {
+  <obj_type:Ident> "{" 
+    <opt:OSep<",", Colon<Ident, SpLit>>>
+  "}" => SceneObject::new(obj_type, opt),
+};
+
+//////////////
+// Lit 
+
+SpLit: SpannedLit = {
+  <@L> <Lit> <@R> => SpannedLit::new(<>),
+}
+
+Lit: Lit = {
+  <String>       => Lit::String(<>),
+  <Double>       => Lit::Double(<>),
+  <Int>          => Lit::Int(<>),
+  <Tuple<SpLit>> => Lit::Tuple(<>),
+
+  "{" <OSep<",", Colon<Ident, SpLit>>> "}"
+                 => Lit::Object(<>),
+};
+
+//////////////
+// Other
+
+// TODO: Don't unwrap
+Int    : i32    = { <s:r"\-?\d+">                        => i32::from_str(s).unwrap() };
+Double : f64    = { <s:r"\-?\d*\.\d+">                   => f64::from_str(s).unwrap() };
+String : String = { <s:r#""[[:ascii:]]*""#>              => s.to_string()             };
+Ident  : Ident = { 
+  <l: @L> <s:r"[_[[:alpha:]]][[[:alnum:]]_]*"> <r: @R>
+    => Ident::new(l, s, r),
+};
+
+//////////
+// Helpers
+
+Tuple<T>: Vec<T> = {
+  "(" <OSep<",", T>> ")" => <>,
+};
+
+OSep<S, T>: Vec<T> = {
+  <(<T> S?)*> => <>
+}
+
+Colon<K, V>: (K, V) = {
+  <K> ":" <V> => (<>)
+};
+

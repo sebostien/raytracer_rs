@@ -1,7 +1,5 @@
-use serde::{Deserialize, Serialize};
-
 /// RGB color
-#[derive(Debug, Clone, Copy, Deserialize, Serialize)]
+#[derive(Debug, Clone, Copy)]
 pub struct Color {
     /// [0, 255]
     r: f64,
@@ -39,20 +37,32 @@ impl Color {
             b: (self.b * s).min(255.0),
         }
     }
+}
 
-    pub fn add(mut self, other: &Color) -> Self {
-        self.r += other.r;
-        self.g += other.g;
-        self.b += other.b;
-        self
+impl std::ops::Add for Color {
+    type Output = Self;
+
+    fn add(mut self, rhs: Self) -> Self::Output {
+        Self {
+            r: self.r + rhs.r,
+            g: self.g + rhs.g,
+            b: self.b + rhs.b,
+        }
     }
 }
 
 impl From<Color> for [u8; 3] {
     fn from(value: Color) -> Self {
-        debug_assert!(0.0 <= value.r && value.r <= 255.0);
-        debug_assert!(0.0 <= value.g && value.g <= 255.0);
-        debug_assert!(0.0 <= value.b && value.b <= 255.0);
+        #[cfg(debug_assertions)]
+        {
+            if !(0.0..=255.0).contains(&value.r)
+                || !(0.0..=255.0).contains(&value.g)
+                || !(0.0..=255.0).contains(&value.b)
+            {
+                // TODO: Blend better! This happens too often.
+                // println!("Color is outside rgb range");
+            }
+        }
         [
             value.r.round() as u8,
             value.g.round() as u8,

@@ -1,9 +1,7 @@
-use serde::{Deserialize, Serialize};
-
 use crate::{vec3::Vec3, UP_DIRECTION};
 
 /// A 3d rotation matrix
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug)]
 pub struct Rotation {
     pub(crate) matrix: [[f64; 3]; 3],
 }

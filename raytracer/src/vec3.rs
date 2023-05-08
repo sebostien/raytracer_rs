@@ -1,9 +1,7 @@
-use serde::{Deserialize, Serialize};
-
 use crate::{rotation::Rotation, FLOAT_EPS};
 
 /// Vector in 3d-space.
-#[derive(Debug, Clone, Copy, Deserialize, Serialize)]
+#[derive(Debug, Clone, Copy)]
 pub struct Vec3 {
     /// The x-component of the vector.
     pub x: f64,

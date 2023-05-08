@@ -41,7 +41,7 @@ impl Ray {
         object
             .intersection(self)
             .map(|Intersection { pos, normal }| RayHit {
-                color: object.color,
+                color: object.material.color,
                 intersection: pos,
                 normal,
             })
