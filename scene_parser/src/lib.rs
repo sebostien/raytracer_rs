@@ -15,7 +15,7 @@ lalrpop_mod!(
     scene
 );
 
-const DEFAULT_FOV: f64 = 45.0;
+const DEFAULT_FOV: f64 = 90.0;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ParseStringError {

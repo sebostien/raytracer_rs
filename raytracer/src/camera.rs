@@ -10,6 +10,8 @@ pub struct Camera {
     viewport: Viewport,
     /// The field-of-view in radians for the camera.
     fov: f64,
+    /// The distance from the camera to the viewport.
+    distance: f64,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -36,7 +38,7 @@ impl Camera {
     /// * `height`   - Number of vertical pixels in the resulting frame
     /// * `position` - The position of the camera
     /// * `view_dir` - The direction that the camera looks in
-    /// * `fov`      - Field of view in degrees [0, 180]
+    /// * `fov`      - Field of view in degrees [0, 180)
     pub fn new(
         width: u32,
         height: u32,
@@ -55,49 +57,51 @@ impl Camera {
             rotation: view_dir.into(),
             viewport: Viewport::new(width, height, fov_rad),
             fov: fov_rad,
+            distance: 1.0 / (fov_rad / 2.0).tan(),
         })
     }
 
     pub fn set_width(&mut self, width: u32) {
-        self.viewport.set_width(width);
+        self.viewport = Viewport::new(width, self.viewport.pixels_y, self.fov);
     }
 
     pub fn set_height(&mut self, height: u32) {
-        self.viewport.set_height(height);
+        self.viewport = Viewport::new(self.viewport.pixels_x, height, self.fov);
     }
 
     /// Returns a ray with origin from the cameras position
     /// and in the direction of the pixel.
-    pub fn ray_from_pixel(&self, pixel_x: usize, pixel_y: usize) -> Ray {
-        // Map pixels to range [-1, 1]
-        let x = pixel_x as f64 * self.viewport.pixel_width - 0.5;
-        let y = pixel_y as f64 * self.viewport.pixel_height - 0.5;
+    pub fn ray_from_pixel(&self, pixel_x: f64, pixel_y: f64) -> Ray {
+        // Map x to range [-aspect_ratio, aspect_ratio]
+        let x = (pixel_x + 0.5) * self.viewport.pixel_width - self.viewport.aspect_ratio;
+        // Map y to range [-1, 1]
+        let y = (pixel_y + 0.5) * self.viewport.pixel_height - 1.0;
 
-        let direction = Vec3::new(x, y, VIEWPORT_DISTANCE).rotate(&self.rotation);
+        let direction = Vec3::new(x, y, self.distance).rotate(&self.rotation);
 
         let origin = self.position;
         Ray::new(origin, direction)
     }
 
     /// Returns the number of pixels in the resulting image.
-    /// (pixels x, pixels y)
-    pub fn pixels(&self) -> (usize, usize) {
+    /// (width, height)
+    pub fn pixels(&self) -> (u32, u32) {
         (self.viewport.pixels_x, self.viewport.pixels_y)
     }
 }
 
-/// A grid in front of the camera.
+/// A plane in front of the camera.
 ///
-/// The grid is 2 by 2 meter.
-/// Top left: (-1,-1), Bottom right: (1,1)
+/// The plane has dimensions:
+/// Top left: (-aspect_ratio,-1), Bottom right: (aspect_ratio,1)
 #[derive(Debug)]
 struct Viewport {
     /// `width / height`
     aspect_ratio: f64,
     /// Number of horizontal pixels.
-    pixels_x: usize,
+    pixels_x: u32,
     /// Number of vertical pixels.
-    pixels_y: usize,
+    pixels_y: u32,
     /// The distance between two pixels in the x-direction.
     pixel_width: f64,
     /// The distance between two pixels in the y-direction.
@@ -113,27 +117,13 @@ impl Viewport {
         let aspect_ratio = w / h;
 
         Self {
-            pixels_x: width as usize,
-            pixels_y: height as usize,
+            pixels_x: width,
+            pixels_y: height,
             aspect_ratio,
-            // The grid is 1 m by 1 m.
-            // So we divide the grid evenly by the number of pixels.
-            pixel_width: 1.0 / w,
-            pixel_height: 1.0 / h / aspect_ratio,
+            // The grid should be `aspect_ratio` wide.
+            pixel_width: 2.0 * aspect_ratio / w,
+            // The grid sohuld be 2 m tall
+            pixel_height: 2.0 / h,
         }
-    }
-
-    pub fn set_width(&mut self, width: u32) {
-        let w = width as f64;
-        self.pixels_x = width as usize;
-        self.pixel_width = 1.0 / w;
-        self.aspect_ratio = w / self.pixels_y as f64;
-    }
-
-    pub fn set_height(&mut self, height: u32) {
-        let h = height as f64;
-        self.pixels_y = height as usize;
-        self.pixel_width = 1.0 / h;
-        self.aspect_ratio = self.pixels_x as f64 / h;
     }
 }

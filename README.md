@@ -1,8 +1,8 @@
 # Raytracer_rs
 
-A simple [raytracer][ray_wiki] written in rust.
+A simple [ray tracer][ray_wiki] written in rust.
 
-The code for the raytracing algorithm is found in [raytracer](./raytracer/).
+The code for the ray tracing algorithm is found in [raytracer](./raytracer/).
 
 To specify scenes the program uses a custom DSL parsed by the
 crate [scene_parser](./scene_parser/).

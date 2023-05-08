@@ -211,11 +211,13 @@ impl Raytracer {
     pub fn raycast(&self) -> Vec<Vec<Color>> {
         let (px, py) = self.camera.pixels();
 
-        let mut image = vec![vec![self.background_color; px]; py];
+        let mut image = vec![vec![self.background_color; px as usize]; py as usize];
 
         for (row, img_row) in image.iter_mut().enumerate() {
+            let y = row as f64;
             for (col, img_cell) in img_row.iter_mut().enumerate() {
-                let ray = self.camera.ray_from_pixel(col, row);
+                let x = col as f64;
+                let ray = self.camera.ray_from_pixel(x, y);
 
                 if let Some(color) = self.trace(ray, self.recurse_depth) {
                     *img_cell = color;
