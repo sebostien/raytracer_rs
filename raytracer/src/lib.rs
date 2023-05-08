@@ -53,7 +53,7 @@ pub struct Raytracer {
     world: Vec<Object>,
     lights: Vec<Light>,
     background_color: Color,
-    recurse_depth: isize,
+    recurse_depth: i64,
 }
 
 impl Raytracer {
@@ -62,7 +62,7 @@ impl Raytracer {
         world: Vec<Object>,
         lights: Vec<Light>,
         background_color: Color,
-        recurse_depth: isize,
+        recurse_depth: i64,
     ) -> Self {
         Self {
             camera,
@@ -81,8 +81,8 @@ impl Raytracer {
         self.camera.set_height(height);
     }
 
-    pub fn set_recurse_depth(&mut self, depth: usize) {
-        self.recurse_depth = depth as isize;
+    pub fn set_recurse_depth(&mut self, depth: u32) {
+        self.recurse_depth = depth as i64;
     }
 }
 
@@ -141,7 +141,7 @@ impl Raytracer {
         object: &Object,
         intersection_pos: Vec3,
         intersection_normal: Vec3,
-        depth: isize,
+        depth: i64,
     ) -> Color {
         let mut color = BLACK_COLOR;
 
@@ -163,7 +163,7 @@ impl Raytracer {
         object: &Object,
         intersection_pos: Vec3,
         intersection_normal: Vec3,
-        depth: isize,
+        depth: i64,
     ) -> Color {
         let color = object.material.color.scale(self.lambertian(
             object,
@@ -177,7 +177,7 @@ impl Raytracer {
     }
 
     /// Raycast from point with recursion level equal to `depth`.
-    fn trace(&self, ray: Ray, depth: isize) -> Option<Color> {
+    fn trace(&self, ray: Ray, depth: i64) -> Option<Color> {
         if depth <= 0 {
             return None;
         }

@@ -22,7 +22,7 @@ struct Args {
     #[arg(long)]
     height: Option<u32>,
     #[arg(short, long)]
-    recurse_depth: Option<usize>,
+    recurse_depth: Option<u32>,
 }
 
 fn main() {

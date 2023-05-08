@@ -1,4 +1,4 @@
-use crate::scene_object::SceneObject;
+use crate::scene_object::{GlobalOptions, SceneObject};
 use crate::SceneParseError;
 
 use raytracer::{Color, Raytracer};
@@ -13,10 +13,14 @@ impl SceneBuilder {
         let mut objects = vec![];
         let mut lights = vec![];
         let mut errors = vec![];
+        let mut options = GlobalOptions::default();
 
         for object in scene_objects {
             match object {
                 Ok(object) => match object {
+                    SceneObject::GlobalOptions(o) => {
+                        options = o;
+                    }
                     SceneObject::Camera(c) => cameras.push(c),
                     SceneObject::Object(p, m) => objects.push(raytracer::Object {
                         primitive: p,
@@ -54,7 +58,7 @@ impl SceneBuilder {
                 lights,
                 // TODO: Global options
                 Color::new(0, 0, 0),
-                2,
+                options.recurse_depth.into(),
             ))
         } else {
             unreachable!()

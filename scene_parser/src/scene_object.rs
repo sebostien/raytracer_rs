@@ -8,6 +8,7 @@ pub enum SceneObject {
     Camera(Camera),
     Object(Primitive, Material),
     Light(Light),
+    GlobalOptions(GlobalOptions),
 }
 
 impl SceneObject {
@@ -87,6 +88,17 @@ impl SceneObject {
         Ok(Light { pos, intensity })
     }
 
+    fn build_global(ident: Ident, options: &mut Options) -> Result<GlobalOptions, SceneParseError> {
+        let mut go = GlobalOptions::default();
+        let start = ident.start;
+        if let Ok((_, lit)) = options.get("recurse_depth", start) {
+            go.recurse_depth = lit.get_u32()?;
+        }
+        options.check_empty()?;
+
+        Ok(go)
+    }
+
     pub fn new(
         ident: Ident,
         options: Vec<(Ident, SpannedLit)>,
@@ -94,6 +106,9 @@ impl SceneObject {
         let options = &mut Options::build(options)?;
 
         match ident.name.to_lowercase().as_str() {
+            "global" => Ok(SceneObject::GlobalOptions(SceneObject::build_global(
+                ident, options,
+            )?)),
             "camera" => Ok(SceneObject::Camera(SceneObject::build_camera(
                 ident, options,
             )?)),
@@ -111,5 +126,16 @@ impl SceneObject {
                 Ok(SceneObject::Object(prim, material))
             }
         }
+    }
+}
+
+#[derive(Debug)]
+pub struct GlobalOptions {
+    pub recurse_depth: u32,
+}
+
+impl Default for GlobalOptions {
+    fn default() -> Self {
+        Self { recurse_depth: 5 }
     }
 }
