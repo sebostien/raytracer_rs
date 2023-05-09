@@ -1,8 +1,8 @@
 use crate::lit::SpannedLit;
 use crate::options::Options;
 use crate::{Ident, SceneParseError, DEFAULT_FOV};
-use raytracer::primitive::{Plane, Primitive, Sphere, Triangle};
-use raytracer::{Camera, Light, Material};
+use raytrace_lib::primitive::{Plane, Primitive, Sphere, Triangle};
+use raytrace_lib::{Camera, Light, Material};
 
 pub enum SceneObject {
     Camera(Camera),

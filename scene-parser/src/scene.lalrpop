@@ -5,7 +5,7 @@ use crate::scene_builder::SceneBuilder;
 use crate::scene_object::SceneObject;
 use crate::lit::{SpannedLit, Lit};
 
-use raytracer::{Raytracer};
+use raytrace_lib::{Raytracer};
 
 grammar;
 

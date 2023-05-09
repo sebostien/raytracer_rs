@@ -1,4 +1,4 @@
-use raytracer::{Color, Vec3};
+use raytrace_lib::{Color, Vec3};
 
 use crate::options::Options;
 use crate::{Ident, SceneParseError};

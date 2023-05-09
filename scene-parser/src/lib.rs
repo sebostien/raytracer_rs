@@ -4,7 +4,7 @@ mod scene_builder;
 mod scene_object;
 
 use lalrpop_util::ParseError;
-use raytracer::Raytracer;
+use raytrace_lib::Raytracer;
 
 #[macro_use]
 extern crate lalrpop_util;
@@ -50,7 +50,7 @@ impl std::fmt::Display for ParseStringError {
 
 impl ParseStringError {
     /// Annotate error like cargo.
-    pub fn annotate(
+    fn annotate(
         source_lines: &[&str],
         start: &Location,
         end: Option<&Location>,

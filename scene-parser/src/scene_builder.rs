@@ -1,7 +1,7 @@
 use crate::scene_object::{GlobalOptions, SceneObject};
 use crate::SceneParseError;
 
-use raytracer::{Color, Raytracer};
+use raytrace_lib::{Color, Raytracer, Object};
 
 pub struct SceneBuilder;
 
@@ -22,7 +22,7 @@ impl SceneBuilder {
                         options = o;
                     }
                     SceneObject::Camera(c) => cameras.push(c),
-                    SceneObject::Object(p, m) => objects.push(raytracer::Object {
+                    SceneObject::Object(p, m) => objects.push(Object {
                         primitive: p,
                         material: m,
                     }),
@@ -56,7 +56,6 @@ impl SceneBuilder {
                 camera,
                 objects,
                 lights,
-                // TODO: Global options
                 Color::new(0, 0, 0),
                 options.recurse_depth.into(),
             ))
