@@ -1,6 +1,9 @@
+use std::str::FromStr;
+
 use crate::lit::SpannedLit;
 use crate::options::Options;
 use crate::{Ident, SceneParseError, DEFAULT_FOV};
+use raytrace_lib::material::MaterialTemplate;
 use raytrace_lib::primitive::{Plane, Primitive, Sphere, Triangle};
 use raytrace_lib::{Camera, Light, Material};
 
@@ -66,17 +69,44 @@ impl SceneObject {
         let start = ident.start;
 
         let color = options.get("color", start)?.1.get_color()?;
-        let lambert = options.get("lambert", start)?.1.get_double()?;
-        let specular = options.get("specular", start)?.1.get_double()?;
-        let ambient = options.get("ambient", start)?.1.get_double()?;
+        let lambert = options.get("lambert", start).map(|(_, l)| l.get_double());
+        let specular = options.get("specular", start).map(|(_, l)| l.get_double());
+        let ambient = options.get("ambient", start).map(|(_, l)| l.get_double());
+
+        let mat = if let Ok((_, lit)) = options.get("template", start) {
+            let name = lit.get_string()?;
+            let mut mat = MaterialTemplate::from_str(&name)
+                .map_err(|_| SceneParseError::UnknownMaterial {
+                    start: lit.start,
+                    name,
+                    end: lit.end,
+                })?
+                .get_material(color);
+
+            if let Ok(Ok(l)) = lambert {
+                mat.lambert = l;
+            }
+
+            if let Ok(Ok(s)) = specular {
+                mat.specular = s;
+            }
+
+            if let Ok(Ok(a)) = ambient {
+                mat.ambient = a;
+            }
+
+            mat
+        } else {
+            Material {
+                color,
+                lambert: lambert??,
+                specular: specular??,
+                ambient: ambient??,
+            }
+        };
 
         options.check_empty()?;
-        Ok(Material {
-            color,
-            lambert,
-            specular,
-            ambient,
-        })
+        Ok(mat)
     }
 
     fn build_light(ident: Ident, options: &mut Options) -> Result<Light, SceneParseError> {

@@ -5,9 +5,9 @@ edition = "2021"
 build = "src/build.rs"
 
 [dependencies]
-lalrpop-util = { version = "0.19.12", features = ["lexer"] }
+lalrpop-util = { version = "0.20.0", features = ["lexer"] }
 raytrace-lib = { path = "../raytrace-lib/" }
 
 [build-dependencies]
-lalrpop = "0.19.12"
+lalrpop = "0.20.0"
 

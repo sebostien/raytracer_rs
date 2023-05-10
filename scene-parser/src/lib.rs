@@ -98,6 +98,16 @@ pub enum SceneParseError {
         ident: String,
         end: usize,
     },
+    UnknownMaterial {
+        start: usize,
+        name: String,
+        end: usize,
+    },
+    UnknownColor {
+        start: usize,
+        name: String,
+        end: usize,
+    },
     DuplicateKey {
         start: usize,
         key: String,
@@ -134,6 +144,26 @@ impl SceneParseError {
                     &start,
                     Some(&end),
                     format!("Unknown object '{ident}'"),
+                )
+            }
+            SceneParseError::UnknownMaterial { start, name, end } => {
+                let start = Location::new(start, input_string);
+                let end = Location::new(end, input_string);
+                ParseStringError::annotate(
+                    input_lines,
+                    &start,
+                    Some(&end),
+                    format!("Unknown material '{name}'"),
+                )
+            }
+            SceneParseError::UnknownColor { start, name, end } => {
+                let start = Location::new(start, input_string);
+                let end = Location::new(end, input_string);
+                ParseStringError::annotate(
+                    input_lines,
+                    &start,
+                    Some(&end),
+                    format!("Unknown color '{name}'"),
                 )
             }
             SceneParseError::DuplicateKey { start, key } => {
@@ -262,7 +292,7 @@ pub fn parse_string(s: &str) -> Result<Raytracer, ParseStringError> {
                     "Invalid token".to_string(),
                 )
             }
-            ParseError::UnrecognizedEOF {
+            ParseError::UnrecognizedEof {
                 location: _,
                 expected,
             } => ParseStringError::UnrecognizedEOF { expected },
@@ -310,9 +340,19 @@ mod tests {
                 r: 0.1,
                 material: {
                     color: (255, 0, 0),
-                    lambert: 1.0,
-                    specular: 0.0,
+                    template: "metal",
                     ambient: 0.1,
+                }
+            }
+
+            Sphere {
+                pos: (1.0,2.0,3.0),
+                r: 0.1,
+                material: {
+                    color: (255, 0, 0),
+                    ambient: 0.1,
+                    lambert: 1.0,
+                    specular: 0.1,
                 }
             }
 
@@ -324,7 +364,7 @@ mod tests {
         .trim();
         let parsed = parse_string(&s);
         if !parsed.is_ok() {
-            panic!("Expected Ok: {:#?}", parsed);
+            panic!("Expected Ok: {}", parsed.unwrap_err());
         }
     }
 

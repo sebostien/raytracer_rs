@@ -19,7 +19,6 @@ pub use material::Material;
 pub use object::Object;
 pub use vec3::Vec3;
 
-use color::BLACK_COLOR;
 use primitive::{Plane, Sphere};
 use primitive::{Primitive, Triangle};
 use ray::{Ray, RayHit};
@@ -108,11 +107,11 @@ impl Raytracer {
     /// <https://en.wikipedia.org/wiki/Lambertian_reflectance>
     fn lambertian(
         &self,
-        object: &Object,
+        material: &Material,
         intersection_pos: Vec3,
         intersection_normal: Vec3,
     ) -> f64 {
-        if object.material.lambert <= 0.0 {
+        if material.lambert <= 0.0 {
             return 0.0;
         }
 
@@ -131,49 +130,45 @@ impl Raytracer {
             }
         }
 
-        (brightness * object.material.lambert).min(1.0)
+        (brightness * material.lambert).min(1.0)
     }
 
     /// Reflect
     /// <https://en.wikipedia.org/wiki/Specular_reflection>
     fn specular(
         &self,
-        object: &Object,
+        material: &Material,
         intersection_pos: Vec3,
         intersection_normal: Vec3,
         depth: i64,
     ) -> Color {
-        let mut color = BLACK_COLOR;
-
-        if object.material.specular <= 0.0 {
-            return color;
+        if material.specular <= 0.0 {
+            return Color::zero();
         }
 
         let reflected_dir = intersection_pos.reflect(intersection_normal);
         let new_ray = Ray::new(intersection_pos, reflected_dir);
-        if let Some(reflected_color) = self.trace(new_ray, depth - 1) {
-            color = color + reflected_color.scale(object.material.specular);
-        }
 
-        color
+        self.trace(new_ray, depth - 1)
+            .map(|c| c.scale(material.specular))
+            .unwrap_or(Color::zero())
     }
 
     fn shading(
         &self,
-        object: &Object,
+        material: &Material,
         intersection_pos: Vec3,
         intersection_normal: Vec3,
         depth: i64,
     ) -> Color {
-        let color = object.material.color.scale(self.lambertian(
-            object,
-            intersection_pos,
-            intersection_normal,
-        ));
+        let color =
+            material
+                .color
+                .scale(self.lambertian(material, intersection_pos, intersection_normal));
 
-        let color = color + self.specular(object, intersection_pos, intersection_normal, depth);
+        let color = color + self.specular(material, intersection_pos, intersection_normal, depth);
 
-        color + object.material.color.scale(object.material.ambient)
+        color + material.color.scale(material.ambient)
     }
 
     /// Raycast from point with recursion level equal to `depth`.
@@ -199,7 +194,12 @@ impl Raytracer {
         }
 
         if let Some((_, ray_hit, object)) = hit {
-            let color = self.shading(object, ray_hit.intersection, ray_hit.normal, depth - 1);
+            let color = self.shading(
+                &object.material,
+                ray_hit.intersection,
+                ray_hit.normal,
+                depth - 1,
+            );
             Some(color)
         } else {
             None

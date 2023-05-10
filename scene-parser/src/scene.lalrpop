@@ -46,7 +46,7 @@ Lit: Lit = {
 // TODO: Don't unwrap
 Int    : i32    = { <s:r"\-?\d+">                        => i32::from_str(s).unwrap() };
 Double : f64    = { <s:r"\-?\d*\.\d+">                   => f64::from_str(s).unwrap() };
-String : String = { <s:r#""[[:ascii:]]*""#>              => s.to_string()             };
+String : String = { <s:r#""[[[:ascii:]]--"]*""#>              => s.to_string()             };
 Ident  : Ident = { 
   <l: @L> <s:r"[_[[:alpha:]]][[[:alnum:]]_]*"> <r: @R>
     => Ident::new(l, s, r),

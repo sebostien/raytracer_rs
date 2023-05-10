@@ -1,3 +1,6 @@
+use std::str::FromStr;
+
+use raytrace_lib::color::ColorNames;
 use raytrace_lib::{Color, Vec3};
 
 use crate::options::Options;
@@ -5,9 +8,9 @@ use crate::{Ident, SceneParseError};
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct SpannedLit {
-    start: usize,
+    pub start: usize,
     lit: Lit,
-    end: usize,
+    pub end: usize,
 }
 
 impl SpannedLit {
@@ -82,6 +85,19 @@ impl SpannedLit {
             ),
         }
     }
+
+    pub fn get_string(&self) -> Result<String, SceneParseError> {
+        match &self.lit {
+            Lit::String(s) => Ok(s[1..s.len() - 1].to_string()),
+            _ => Err(SceneParseError::WrongType {
+                start: self.start,
+                t: self.to_type_string(),
+                expected: TYPE_STRING,
+                end: self.end,
+            }),
+        }
+    }
+
     pub fn get_double(&self) -> Result<f64, SceneParseError> {
         match self.lit {
             Lit::Double(d) => Ok(d),
@@ -152,10 +168,24 @@ impl SpannedLit {
     }
 
     pub fn get_color(&self) -> Result<Color, SceneParseError> {
-        if let Lit::Tuple(v) = &self.lit {
-            if let [x, y, z] = v.as_slice() {
-                return Ok(Color::new(x.get_u8()?, y.get_u8()?, z.get_u8()?));
+        match &self.lit {
+            // Either "red"
+            Lit::String(name) => {
+                let color =
+                    ColorNames::from_str(name).map_err(|_| SceneParseError::UnknownColor {
+                        start: self.start,
+                        name: name.clone(),
+                        end: self.end,
+                    })?;
+                return Ok(color.into());
             }
+            // Or tuple (255,0,0)
+            Lit::Tuple(color) => {
+                if let [x, y, z] = color.as_slice() {
+                    return Ok(Color::new(x.get_u8()?, y.get_u8()?, z.get_u8()?));
+                }
+            }
+            _ => {}
         }
 
         Err(SceneParseError::WrongType {
