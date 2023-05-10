@@ -79,7 +79,8 @@ impl Intersectable for Plane {
         let d = (plane_point - ray_origin).dot(normal.to_owned()) / dir_dot_normal;
 
         // Intersection behind the ray origin
-        if d < 0.0 {
+        // TODO: Test value either 0.0 or this
+        if d < FLOAT_EPS {
             return None;
         }
 

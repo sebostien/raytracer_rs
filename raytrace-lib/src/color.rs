@@ -20,6 +20,10 @@ impl Color {
         }
     }
 
+    pub fn new_f(r: f64, g: f64, b: f64) -> Self {
+        Self { r, g, b }
+    }
+
     pub fn zero() -> Self {
         Self {
             r: 0.0,
@@ -35,6 +39,10 @@ impl Color {
             b: (self.b * s).min(1.0),
         }
     }
+
+    pub fn is_zero(&self) -> bool {
+        self.r <= 0.0 && self.g <= 0.0 && self.b <= 0.0
+    }
 }
 
 impl std::ops::Add for Color {
@@ -45,6 +53,18 @@ impl std::ops::Add for Color {
             r: (self.r + rhs.r).min(1.0),
             g: (self.g + rhs.g).min(1.0),
             b: (self.b + rhs.b).min(1.0),
+        }
+    }
+}
+
+impl std::ops::Mul for Color {
+    type Output = Self;
+
+    fn mul(self, rhs: Self) -> Self::Output {
+        Self {
+            r: self.r * rhs.r,
+            g: self.g * rhs.g,
+            b: self.b * rhs.b,
         }
     }
 }

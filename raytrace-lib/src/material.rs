@@ -6,24 +6,22 @@ use crate::Color;
 pub struct Material {
     pub color: Color,
     /// Specular reflection defines how much of light the object reflects.
-    /// Should be in range \[0,1\].
     /// <https://en.wikipedia.org/wiki/Specular_reflection>
-    pub specular: f64,
+    pub specular: Color,
     /// Lamberterian reflectance defines how “matte” the object appears.
-    /// Should be in range \[0,1\].
     /// <https://en.wikipedia.org/wiki/Lambertian_reflectance>
-    pub lambert: f64,
+    pub lambert: Color,
     /// Ambient lighting defines how strong the “base light” should be interpreted.
-    /// Should be in range \[0,1\].
     /// <https://en.wikipedia.org/wiki/Shading#Ambient_lighting>
-    pub ambient: f64,
+    pub ambient: Color,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum MaterialTemplate {
-    Matte,
-    Metal,
-    Mirror,
+    Red,
+    Green,
+    Blue,
+    Bronze,
 }
 
 impl FromStr for MaterialTemplate {
@@ -32,9 +30,10 @@ impl FromStr for MaterialTemplate {
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         use MaterialTemplate::*;
         let m = match s {
-            "matte" => Matte,
-            "metal" => Metal,
-            "mirror" => Mirror,
+            "red" => Red,
+            "green" => Green,
+            "blue" => Blue,
+            "bronze" => Bronze,
             _ => return Err(format!("No material template named '{s}'")),
         };
         Ok(m)
@@ -42,33 +41,44 @@ impl FromStr for MaterialTemplate {
 }
 
 impl MaterialTemplate {
-    pub fn get_name_tuples() -> [(&'static str, Self); 3] {
+    pub fn get_name_tuples() -> [(&'static str, Self); 4] {
         use MaterialTemplate::*;
 
-        [("matte", Matte), ("metal", Metal), ("mirror", Mirror)]
+        [
+            ("red", Red),
+            ("green", Green),
+            ("blue", Blue),
+            ("bronze", Bronze),
+        ]
     }
 
     pub fn get_material(&self, color: Color) -> Material {
         use MaterialTemplate::*;
 
         match self {
-            Matte => Material {
+            Red => Material {
                 color,
-                specular: 0.0,
-                lambert: 0.9,
-                ambient: 0.2,
+                ambient: Color::zero(),
+                lambert: Color::new_f(1.0, 0.0, 0.0),
+                specular: Color::new_f(0.0225, 0.0225, 0.0225),
             },
-            Metal => Material {
+            Green => Material {
                 color,
-                specular: 0.8,
-                lambert: 0.3,
-                ambient: 0.1,
+                ambient: Color::zero(),
+                lambert: Color::new_f(0.0, 1.0, 0.0),
+                specular: Color::new_f(0.0225, 0.0225, 0.0225),
             },
-            Mirror => Material {
+            Blue => Material {
                 color,
-                specular: 1.0,
-                lambert: 0.0,
-                ambient: 0.0,
+                ambient: Color::zero(),
+                lambert: Color::new_f(0.0, 0.0, 1.0),
+                specular: Color::new_f(0.0225, 0.0225, 0.0225),
+            },
+            Bronze => Material {
+                color,
+                ambient: Color::new_f(0.2125, 0.1275, 0.054),
+                lambert: Color::new_f(0.714, 0.4284, 0.18144),
+                specular: Color::new_f(0.393548, 0.271906, 0.166721),
             },
         }
     }

@@ -340,8 +340,8 @@ mod tests {
                 r: 0.1,
                 material: {
                     color: (255, 0, 0),
-                    template: "metal",
-                    ambient: 0.1,
+                    template: "bronze",
+                    ambient: (0, 0, 0),
                 }
             }
 
@@ -350,9 +350,9 @@ mod tests {
                 r: 0.1,
                 material: {
                     color: (255, 0, 0),
-                    ambient: 0.1,
-                    lambert: 1.0,
-                    specular: 0.1,
+                    ambient: (20,20,20),
+                    lambert: (255,255,255),
+                    specular: (10,10,10),
                 }
             }
 

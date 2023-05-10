@@ -34,7 +34,7 @@ pub enum SceneObject {
 }
 
 /// Precision of comparisons.
-pub const FLOAT_EPS: f64 = 0.000000001;
+pub const FLOAT_EPS: f64 = 0.000001;
 
 /// Distance in meters from camera to viewport.
 const VIEWPORT_DISTANCE: f64 = 1.0;
@@ -110,9 +110,9 @@ impl Raytracer {
         material: &Material,
         intersection_pos: Vec3,
         intersection_normal: Vec3,
-    ) -> f64 {
-        if material.lambert <= 0.0 {
-            return 0.0;
+    ) -> Color {
+        if material.lambert.is_zero() {
+            return Color::zero();
         }
 
         let mut brightness = 0.0;
@@ -130,7 +130,7 @@ impl Raytracer {
             }
         }
 
-        (brightness * material.lambert).min(1.0)
+        material.lambert.scale(brightness.min(1.0))
     }
 
     /// Reflect
@@ -142,7 +142,7 @@ impl Raytracer {
         intersection_normal: Vec3,
         depth: i64,
     ) -> Color {
-        if material.specular <= 0.0 {
+        if material.specular.is_zero() {
             return Color::zero();
         }
 
@@ -150,7 +150,7 @@ impl Raytracer {
         let new_ray = Ray::new(intersection_pos, reflected_dir);
 
         self.trace(new_ray, depth - 1)
-            .map(|c| c.scale(material.specular))
+            .map(|c| c * material.specular)
             .unwrap_or(Color::zero())
     }
 
@@ -162,13 +162,11 @@ impl Raytracer {
         depth: i64,
     ) -> Color {
         let color =
-            material
-                .color
-                .scale(self.lambertian(material, intersection_pos, intersection_normal));
+            material.color * self.lambertian(material, intersection_pos, intersection_normal);
 
         let color = color + self.specular(material, intersection_pos, intersection_normal, depth);
 
-        color + material.color.scale(material.ambient)
+        color + material.color * material.ambient
     }
 
     /// Raycast from point with recursion level equal to `depth`.

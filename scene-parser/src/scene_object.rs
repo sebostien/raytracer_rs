@@ -69,9 +69,9 @@ impl SceneObject {
         let start = ident.start;
 
         let color = options.get("color", start)?.1.get_color()?;
-        let lambert = options.get("lambert", start).map(|(_, l)| l.get_double());
-        let specular = options.get("specular", start).map(|(_, l)| l.get_double());
-        let ambient = options.get("ambient", start).map(|(_, l)| l.get_double());
+        let lambert = options.get("lambert", start).map(|(_, l)| l.get_color());
+        let specular = options.get("specular", start).map(|(_, l)| l.get_color());
+        let ambient = options.get("ambient", start).map(|(_, l)| l.get_color());
 
         let mat = if let Ok((_, lit)) = options.get("template", start) {
             let name = lit.get_string()?;

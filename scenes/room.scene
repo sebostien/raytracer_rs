@@ -14,9 +14,9 @@ Plane {
     normal: (0, 1, 0)
     material: {
       color: (50, 200, 50),
-      specular: 0,
-      lambert: 1,
-      ambient: 0
+      specular: (0,0,0),
+      lambert: (255,255,255),
+      ambient: (0,0,0)
     }
 }
 
@@ -25,9 +25,9 @@ Plane {
     normal: (0, 0, -1)
     material: {
       color: (0, 181, 226),
-      specular: 0,
-      lambert: 1,
-      ambient: 0.1,
+      specular: (0,0,0),
+      lambert: (255,255,255),
+      ambient: (26,26,26),
     }
 }
 
@@ -36,9 +36,9 @@ Plane {
     normal: (0, 0, 1)
     material: {
       color: (32, 178, 170),
-      specular: 0,
-      lambert: 1,
-      ambient: 0.1,
+      specular: (0,0,0),
+      lambert: (255,255,255),
+      ambient: (26,26,26),
     }
 }
 
@@ -47,9 +47,9 @@ Plane {
     normal: (1, 0, 0)
     material: {
       color: (32, 178, 170),
-      specular: 0.1,
-      lambert: 1,
-      ambient: 0
+      specular: (0,0,0),
+      lambert: (255,255,255),
+      ambient: (0,0,0)
     }
 }
 
@@ -58,7 +58,7 @@ Plane {
     normal: (-1, 0, 0)
     material: {
       color: (32, 178, 170),
-      template: "metal",
+      template: "bronze",
     }
 }
 
@@ -67,7 +67,7 @@ Plane {
     normal: (0, -1, 0)
     material: {
       color: (32, 178, 170),
-      template: "metal",
+      template: "bronze",
     }
 }
 
@@ -76,7 +76,7 @@ Sphere {
     r: 1.5,
     material: {
       color: (200, 100, 100),
-      template: "matte"
+      template: "bronze",
     }
 }
 
@@ -85,7 +85,7 @@ Sphere {
     r: 1,
     material: {
       color: (200, 100, 100),
-      template: "matte"
+      template: "bronze",
     }
 }
 
@@ -94,7 +94,7 @@ Sphere {
     r: 3,
     material: {
       color: (80, 200, 100),
-      template: "matte"
+      template: "bronze",
     }
 }
 
@@ -103,7 +103,7 @@ Sphere {
     r: 2,
     material: {
       color: (50, 80, 200),
-      template: "metal"
+      template: "bronze"
     }
 }
 
