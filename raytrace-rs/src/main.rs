@@ -7,8 +7,8 @@ use std::{
 
 use image::RgbImage;
 
-/// The filename images will be saved as (appended with .png).
-const DEFAULT_FILE_NAME: &str = "./raytraced";
+/// The default path when saving images.
+const DEFAULT_FILE_NAME: &str = "./raytraced.png";
 
 #[derive(Parser)]
 #[command(author, version, about)]
@@ -108,7 +108,7 @@ fn create_empty_file<S: AsRef<Path>>(file: S) -> Result<(), String> {
     } else {
         let dir = std::env::current_dir().map_err(|_| {
             format!(
-                "Could not save image to {}! Try using a absolute path instead.",
+                "Could not save image to '{}'\nTry using an absolute path instead.",
                 file.as_ref().to_string_lossy()
             )
         })?;
@@ -124,12 +124,12 @@ fn create_empty_file<S: AsRef<Path>>(file: S) -> Result<(), String> {
 }
 
 fn find_unique_file_name() -> Result<PathBuf, String> {
-    let mut name: String = Path::new(&DEFAULT_FILE_NAME.to_string())
+    let mut name: String = PathBuf::from(DEFAULT_FILE_NAME)
         .absolutize()
         .map_err(|e| e.to_string())?
         .to_string_lossy()
-        .to_string()
-        + ".png";
+        .to_string();
+
     let l = name.len() - 4;
     let mut i = 0;
     while let Ok(true) = Path::new(&name).try_exists() {

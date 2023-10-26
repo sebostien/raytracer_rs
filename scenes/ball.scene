@@ -1,0 +1,33 @@
+Camera {
+  width: 512,
+  height: 512,
+  pos: (0, 1, -8),
+  dir: (0, 0, 1),
+}
+
+Plane {
+    point: (0, 0, 0)
+    normal: (0, 1, 0),
+    material: {
+      color: (100, 201, 97),
+      specular: 0,
+      lambert: 1,
+      ambient: 0.5,
+    }
+}
+
+Sphere {
+    pos: (0, 1, 0)
+    r: 1.0,
+    material: {
+      color: (50, 200, 50),
+      specular: 0,
+      lambert: 1,
+      ambient: 0.1,
+    }
+}
+
+Light {
+    pos: (0, 10, 0),
+    intensity: 1,
+}

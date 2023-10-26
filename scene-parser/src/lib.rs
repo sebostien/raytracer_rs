@@ -292,7 +292,7 @@ pub fn parse_string(s: &str) -> Result<Raytracer, ParseStringError> {
                     "Invalid token".to_string(),
                 )
             }
-            ParseError::UnrecognizedEof {
+            ParseError::UnrecognizedEOF {
                 location: _,
                 expected,
             } => ParseStringError::UnrecognizedEOF { expected },

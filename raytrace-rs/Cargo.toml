@@ -7,5 +7,5 @@ edition = "2021"
 raytrace-lib = { path = "../raytrace-lib/" }
 scene-parser = { path = "../scene-parser/" }
 image = { version = "0.24.6", features = ["png"], default-features = false }
-clap = { version = "4.2.7", features = ["derive"] }
+clap = { version = "4.2.7", features = [ "derive" ] }
 path-absolutize = "3.1"
