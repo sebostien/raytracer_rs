@@ -15,15 +15,14 @@ pub use color::Color;
 pub use light::Light;
 pub use material::Material;
 pub use object::Object;
+use rayon::prelude::{IndexedParallelIterator, IntoParallelRefMutIterator, ParallelIterator};
 pub use vec3::Vec3;
 
 use primitive::Primitive;
 use ray::{Ray, RayHit};
 use rotation::Rotation;
 
-use std::sync::mpsc::channel;
 use std::sync::Arc;
-use threadpool::ThreadPool;
 
 pub enum SceneObject {
     Camera(Camera),
@@ -214,40 +213,34 @@ impl Raytracer {
     /// Returns the colors for each ray.
     /// Ordered by row then column.
     /// Traces using multiple threads.
-    pub fn par_raycast(
-        &self,
-        num_threads: usize,
-        world: Arc<[Object]>,
-        lights: Arc<[Light]>,
-    ) -> Vec<Vec<Color>> {
+    pub fn par_raycast(&self, world: Arc<[Object]>, lights: Arc<[Light]>) -> Vec<Vec<Color>> {
         let (px, py) = self.camera.pixels();
 
         let mut image = vec![vec![Color::zero(); px as usize]; py as usize];
 
-        let px = i64::from(px);
-        let py = i64::from(py);
+        let px = f64::from(px);
+        let py = f64::from(py);
 
-        let pool = ThreadPool::new(num_threads);
-
-        let (tx, rx) = channel();
         let depth = self.recurse_depth;
-        for (row, y) in (-py..0).enumerate() {
-            for (col, x) in (-px / 2..px / 2).enumerate() {
-                let tx = tx.clone();
-                let world = world.clone();
-                let lights = lights.clone();
-                let ray = self.camera.ray_from_pixel(x as f64, -y as f64);
-                pool.execute(move || {
-                    if let Some(hit) = Self::trace(world.as_ref(), lights.as_ref(), ray, depth) {
-                        tx.send((row, col, hit)).expect("Unable to send hit!");
-                    }
-                });
-            }
-        }
 
-        for (row, col, color) in rx.iter().take((px * py) as usize) {
-            image[row][col] = color;
-        }
+        image[..]
+            .par_iter_mut()
+            .enumerate()
+            .for_each(|(row, img_row)| {
+                img_row[..]
+                    .par_iter_mut()
+                    .enumerate()
+                    .for_each(|(col, img_cell)| {
+                        let py = py - (row as f64);
+                        let px = (col as f64) - px / 2.0;
+
+                        let ray = self.camera.ray_from_pixel(px, py);
+                        if let Some(hit) = Self::trace(world.as_ref(), lights.as_ref(), ray, depth)
+                        {
+                            *img_cell = hit;
+                        }
+                    });
+            });
 
         image
     }

@@ -22,8 +22,6 @@ struct Args {
     recurse_depth: Option<u32>,
     #[arg(short, long)]
     parallel: bool,
-    #[arg(short, long, default_value_t = 8)]
-    num_threads: usize,
 }
 
 fn main() {
@@ -57,7 +55,7 @@ fn run_raytracer(args: Args) -> Result<String, String> {
     }
 
     let out = if args.parallel {
-        raytracer.par_raycast(args.num_threads, world.into(), lights.into())
+        raytracer.par_raycast(world.into(), lights.into())
     } else {
         raytracer.raycast(&world, &lights)
     };

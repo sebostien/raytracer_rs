@@ -12,16 +12,18 @@ Some examples of this are found in the [scenes](./scenes/) folder.
 
 ## Usage
 
-Running on an example with 8 threads:
+Run on an example with parallel:
 
 ```sh
 cargo build --release
-./target/release/raytrace-rs -f scenes/room.scene -r 50 -o raytraced.png -p -n 8
+./target/release/raytrace-rs -f scenes/room.scene -r 5 -o raytraced.png --parallel
 ```
 
 See `raytrace-rs -h` for all available options.
 
 ## Images generated
+
+The image generated from the example above.
 
 <img src="./scenes/room.png" alt="Simple room" width="512"/>
 
