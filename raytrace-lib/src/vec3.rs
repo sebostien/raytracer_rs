@@ -1,7 +1,7 @@
 use crate::{rotation::Rotation, FLOAT_EPS};
 
 /// Vector in 3d-space.
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug,Default, Clone, Copy)]
 pub struct Vec3 {
     /// The x-component of the vector.
     pub x: f64,
@@ -20,8 +20,8 @@ impl Vec3 {
 
 impl Vec3 {
     #[must_use]
-    pub fn cross(self, other: Vec3) -> Vec3 {
-        Vec3 {
+    pub fn cross(self, other: Self) -> Self {
+        Self {
             x: self.y * other.z - self.z * other.y,
             y: self.z * other.x - self.x * other.z,
             z: self.x * other.y - self.y * other.x,
@@ -29,13 +29,13 @@ impl Vec3 {
     }
 
     #[must_use]
-    pub fn dot(self, other: Vec3) -> f64 {
+    pub fn dot(self, other: Self) -> f64 {
         self.x * other.x + self.y * other.y + self.z * other.z
     }
 
     /// Returns the zero vector `{0,0,0}`.
     #[must_use]
-    pub fn zero() -> Self {
+    pub const fn zero() -> Self {
         Self {
             x: 0.0,
             y: 0.0,
@@ -71,9 +71,9 @@ impl Vec3 {
 
     /// Normalize `self` into a unit vector.
     #[must_use]
-    pub fn normalize(self) -> Vec3 {
+    pub fn normalize(self) -> Self {
         let mag = self.length();
-        Vec3 {
+        Self {
             x: self.x / mag,
             y: self.y / mag,
             z: self.z / mag,
@@ -82,7 +82,7 @@ impl Vec3 {
 
     /// Returns a normalized vector that points from `self` to `other`.
     #[must_use]
-    pub fn direction_to(self, other: Vec3) -> Vec3 {
+    pub fn direction_to(self, other: Self) -> Self{
         (other - self).normalize()
     }
 
@@ -91,7 +91,7 @@ impl Vec3 {
     ///
     /// <https://en.wikipedia.org/wiki/Specular_reflection#Vector_formulation>
     #[must_use]
-    pub fn reflect(self, normal: Vec3) -> Vec3 {
+    pub fn reflect(self, normal: Self) -> Self{
         self - 2.0 * normal * normal.dot(self)
     }
 
@@ -104,9 +104,9 @@ impl Vec3 {
     /// Rotates the vector with the given rotation matrix.
     #[must_use]
     pub fn rotate(self, rot: &Rotation) -> Self {
-        let Vec3 { x, y, z } = self;
+        let Self { x, y, z } = self;
         let [[a, b, c], [d, e, f], [g, h, i]] = rot.matrix;
-        Vec3::new(
+        Self::new(
             a * x + b * y + c * z,
             d * x + e * y + f * z,
             g * x + h * y + i * z,
@@ -127,10 +127,10 @@ impl std::ops::Mul<Vec3> for f64 {
 }
 
 impl std::ops::Mul<f64> for Vec3 {
-    type Output = Vec3;
+    type Output = Self;
 
     fn mul(self, rhs: f64) -> Self::Output {
-        Vec3 {
+        Self {
             x: self.x * rhs,
             y: self.y * rhs,
             z: self.z * rhs,
@@ -139,10 +139,10 @@ impl std::ops::Mul<f64> for Vec3 {
 }
 
 impl std::ops::Neg for Vec3 {
-    type Output = Vec3;
+    type Output = Self;
 
     fn neg(self) -> Self::Output {
-        Vec3 {
+        Self {
             x: -self.x,
             y: -self.y,
             z: -self.z,
@@ -151,10 +151,10 @@ impl std::ops::Neg for Vec3 {
 }
 
 impl std::ops::Sub for Vec3 {
-    type Output = Vec3;
+    type Output = Self;
 
     fn sub(self, rhs: Self) -> Self::Output {
-        Vec3 {
+        Self {
             x: self.x - rhs.x,
             y: self.y - rhs.y,
             z: self.z - rhs.z,
@@ -163,10 +163,10 @@ impl std::ops::Sub for Vec3 {
 }
 
 impl std::ops::Add for Vec3 {
-    type Output = Vec3;
+    type Output = Self;
 
     fn add(self, rhs: Self) -> Self::Output {
-        Vec3 {
+        Self {
             x: self.x + rhs.x,
             y: self.y + rhs.y,
             z: self.z + rhs.z,

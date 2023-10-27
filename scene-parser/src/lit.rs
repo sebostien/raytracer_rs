@@ -202,7 +202,7 @@ impl TryFrom<SpannedLit> for Options {
 
     fn try_from(value: SpannedLit) -> Result<Self, Self::Error> {
         if let Lit::Object(os) = value.lit {
-            Ok(Options::build(os)?)
+            Ok(Self::build(os)?)
         } else {
             Err(SceneParseError::WrongType {
                 start: value.start,

@@ -129,31 +129,22 @@ impl SceneObject {
         Ok(go)
     }
 
-    pub fn new(
-        ident: Ident,
-        options: Vec<(Ident, SpannedLit)>,
-    ) -> Result<SceneObject, SceneParseError> {
+    pub fn new(ident: Ident, options: Vec<(Ident, SpannedLit)>) -> Result<Self, SceneParseError> {
         let options = &mut Options::build(options)?;
 
         match ident.name.to_lowercase().as_str() {
-            "global" => Ok(SceneObject::GlobalOptions(SceneObject::build_global(
-                ident, options,
-            )?)),
-            "camera" => Ok(SceneObject::Camera(SceneObject::build_camera(
-                ident, options,
-            )?)),
-            "light" => Ok(SceneObject::Light(SceneObject::build_light(
-                ident, options,
-            )?)),
+            "global" => Ok(Self::GlobalOptions(Self::build_global(ident, options)?)),
+            "camera" => Ok(Self::Camera(Self::build_camera(ident, options)?)),
+            "light" => Ok(Self::Light(Self::build_light(ident, options)?)),
             _ => {
                 let material = options.get("material", ident.start);
                 let prim = Self::build_primitive(&ident, options)?;
                 let material = material?;
                 let material_ident = material.0;
                 let material: &mut Options = &mut material.1.try_into()?;
-                let material = SceneObject::build_material(&material_ident, material)?;
+                let material = Self::build_material(&material_ident, material)?;
 
-                Ok(SceneObject::Object(prim, material))
+                Ok(Self::Object(prim, material))
             }
         }
     }

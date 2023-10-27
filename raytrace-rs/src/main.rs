@@ -1,9 +1,6 @@
 use clap::Parser;
 use path_absolutize::Absolutize;
-use std::{
-    io::Read,
-    path::{Path, PathBuf},
-};
+use std::path::{Path, PathBuf};
 
 use image::RgbImage;
 
@@ -23,6 +20,10 @@ struct Args {
     height: Option<u32>,
     #[arg(short, long)]
     recurse_depth: Option<u32>,
+    #[arg(short, long)]
+    parallel: bool,
+    #[arg(short, long, default_value_t = 8)]
+    num_threads: usize,
 }
 
 fn main() {
@@ -40,7 +41,7 @@ fn main() {
 fn run_raytracer(args: Args) -> Result<String, String> {
     let buf = read_file(args.file)?;
 
-    let mut raytracer =
+    let (world, lights, mut raytracer) =
         scene_parser::parse_string(&buf).map_err(|e| format!("Unable to parse file:\n {e}"))?;
 
     if let Some(w) = args.width {
@@ -55,7 +56,11 @@ fn run_raytracer(args: Args) -> Result<String, String> {
         raytracer.set_recurse_depth(depth);
     }
 
-    let out = raytracer.raycast();
+    let out = if args.parallel {
+        raytracer.par_raycast(args.num_threads, world.into(), lights.into())
+    } else {
+        raytracer.raycast(&world, &lights)
+    };
 
     let width = out[0].len() as u32;
     let height = out.len() as u32;
@@ -90,14 +95,8 @@ fn run_raytracer(args: Args) -> Result<String, String> {
 }
 
 fn read_file(file_name: String) -> Result<String, String> {
-    match std::fs::File::open(file_name) {
-        Ok(mut f) => {
-            let mut buf = String::new();
-            match f.read_to_string(&mut buf) {
-                Ok(_) => Ok(buf),
-                Err(_) => todo!(),
-            }
-        }
+    match std::fs::read_to_string(file_name) {
+        Ok(s) => Ok(s),
         Err(e) => Err(format!("Could not read input file!\n{e}")),
     }
 }

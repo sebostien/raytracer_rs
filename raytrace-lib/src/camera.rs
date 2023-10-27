@@ -1,6 +1,6 @@
-use crate::{ray::Ray, Rotation, Vec3, VIEWPORT_DISTANCE};
+use crate::{ray::Ray, Rotation, Vec3};
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Camera {
     /// The position of the camera.
     position: Vec3,
@@ -55,27 +55,35 @@ impl Camera {
         Ok(Self {
             position,
             rotation: view_dir.into(),
-            viewport: Viewport::new(width, height, fov_rad),
+            viewport: Viewport::new(width, height),
             fov: fov_rad,
             distance: 1.0 / (fov_rad / 2.0).tan(),
         })
     }
 
     pub fn set_width(&mut self, width: u32) {
-        self.viewport = Viewport::new(width, self.viewport.pixels_y, self.fov);
+        self.viewport = Viewport::new(width, self.viewport.pixels_y);
     }
 
     pub fn set_height(&mut self, height: u32) {
-        self.viewport = Viewport::new(self.viewport.pixels_x, height, self.fov);
+        self.viewport = Viewport::new(self.viewport.pixels_x, height);
     }
 
     /// Returns a ray with origin from the cameras position
     /// and in the direction of the pixel.
+    /// `x` should be in the range [-`num_pixels_x`, `num_pixels_x`]
+    /// `y` should be in the range [-`num_pixels_y`, 0]
     pub fn ray_from_pixel(&self, pixel_x: f64, pixel_y: f64) -> Ray {
-        // Map x to range [-aspect_ratio, aspect_ratio]
-        let x = (pixel_x + 0.5) * self.viewport.pixel_width - self.viewport.aspect_ratio;
-        // Map y to range [-1, 1]
-        let y = (pixel_y + 0.5) * self.viewport.pixel_height - 1.0;
+        let scale = (self.fov * 0.5).tan();
+        let x = ((2.0 * (pixel_x + 0.5)) / self.viewport.pixels_x as f64) * scale;
+        let y = (1.0 - 2.0 * (pixel_y + 0.5) / self.viewport.pixels_y as f64)
+            * scale
+            * (1.0 / self.viewport.aspect_ratio);
+
+        // // Map x to range [-aspect_ratio, aspect_ratio]
+        // let x = (pixel_x + 0.5) * self.viewport.pixel_width - self.viewport.aspect_ratio;
+        // // Map y to range [-1, 1]
+        // let y = (pixel_y + 0.5) * self.viewport.pixel_height - 1.0;
 
         let direction = Vec3::new(x, y, self.distance).rotate(&self.rotation);
 
@@ -93,8 +101,8 @@ impl Camera {
 /// A plane in front of the camera.
 ///
 /// The plane has dimensions:
-/// Top left: (-aspect_ratio,-1), Bottom right: (aspect_ratio,1)
-#[derive(Debug)]
+/// Top left: (-`aspect_ratio`,-1), Bottom right: (`aspect_ratio`,1)
+#[derive(Debug, Clone)]
 struct Viewport {
     /// `width / height`
     aspect_ratio: f64,
@@ -102,16 +110,12 @@ struct Viewport {
     pixels_x: u32,
     /// Number of vertical pixels.
     pixels_y: u32,
-    /// The distance between two pixels in the x-direction.
-    pixel_width: f64,
-    /// The distance between two pixels in the y-direction.
-    pixel_height: f64,
 }
 
 impl Viewport {
     /// Width and height are the number of pixels in
     /// the image which is used to calculate aspect ratio.
-    pub fn new(width: u32, height: u32, fov: f64) -> Self {
+    pub fn new(width: u32, height: u32) -> Self {
         let w = width as f64;
         let h = height as f64;
         let aspect_ratio = w / h;
@@ -120,10 +124,6 @@ impl Viewport {
             pixels_x: width,
             pixels_y: height,
             aspect_ratio,
-            // The grid should be `aspect_ratio` wide.
-            pixel_width: 2.0 * aspect_ratio / w,
-            // The grid sohuld be 2 m tall
-            pixel_height: 2.0 / h,
         }
     }
 }

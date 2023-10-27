@@ -1,11 +1,10 @@
 use crate::{
-    color::Color,
     material::Material,
     primitive::{Intersectable, Primitive},
     ray::Ray,
 };
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub struct Object {
     pub primitive: Primitive,
     pub material: Material,

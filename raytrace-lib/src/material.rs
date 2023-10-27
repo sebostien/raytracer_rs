@@ -2,7 +2,7 @@ use std::str::FromStr;
 
 use crate::Color;
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub struct Material {
     pub color: Color,
     /// Specular reflection defines how much of light the object reflects.
@@ -28,7 +28,7 @@ impl FromStr for MaterialTemplate {
     type Err = String;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        use MaterialTemplate::*;
+        use MaterialTemplate::{Red, Green, Blue, Bronze};
         let m = match s {
             "red" => Red,
             "green" => Green,
@@ -42,7 +42,7 @@ impl FromStr for MaterialTemplate {
 
 impl MaterialTemplate {
     pub fn get_name_tuples() -> [(&'static str, Self); 4] {
-        use MaterialTemplate::*;
+        use MaterialTemplate::{Red, Green, Blue, Bronze};
 
         [
             ("red", Red),
@@ -53,7 +53,7 @@ impl MaterialTemplate {
     }
 
     pub fn get_material(&self, color: Color) -> Material {
-        use MaterialTemplate::*;
+        use MaterialTemplate::{Red, Green, Blue, Bronze};
 
         match self {
             Red => Material {

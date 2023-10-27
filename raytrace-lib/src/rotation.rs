@@ -1,7 +1,7 @@
 use crate::{vec3::Vec3, UP_DIRECTION};
 
 /// A 3d rotation matrix
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub struct Rotation {
     pub(crate) matrix: [[f64; 3]; 3],
 }

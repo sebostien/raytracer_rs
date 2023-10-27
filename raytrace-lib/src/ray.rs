@@ -6,7 +6,7 @@ use crate::{
 };
 
 /// A line that start from `origin` and moves in the direction of `dir`.
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub struct Ray {
     /// The origin of the ray,
     pub origin: Vec3,
@@ -15,7 +15,7 @@ pub struct Ray {
     dir: Vec3,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub struct RayHit {
     /// Color of the object which was hit.
     pub color: Color,

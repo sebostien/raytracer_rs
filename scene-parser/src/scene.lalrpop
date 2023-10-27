@@ -5,13 +5,13 @@ use crate::scene_builder::SceneBuilder;
 use crate::scene_object::SceneObject;
 use crate::lit::{SpannedLit, Lit};
 
-use raytrace_lib::{Raytracer};
+use raytrace_lib::{Raytracer, Object, Light};
 
 grammar;
 
 /////////
 // Scene
-pub Scene: Result<Raytracer, Vec<SceneParseError>> = {
+pub Scene: Result<(Vec<Object>, Vec<Light>, Raytracer), Vec<SceneParseError>> = {
   <ss:OSep<";", Object>> => SceneBuilder::build(ss),
 };
 

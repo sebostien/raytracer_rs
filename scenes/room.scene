@@ -1,113 +1,111 @@
-Global {
-    recurse_depth: 2,
-}
-
 Camera {
-  width: 1024,
-  height: 1024,
-  pos: (0, 8, -8),
-  dir: (0, -0.25, 1),
+  width: 4096,
+  height: 4096,
+  pos: (0, 0, -3),
+  dir: (0, 0, 1),
 }
 
 Plane {
-    point: (0, 0, 0)
+    point: (0, -3, 0)
     normal: (0, 1, 0)
     material: {
-      color: (50, 200, 50),
+      color: (150, 150, 150),
       specular: (0,0,0),
-      lambert: (255,255,255),
-      ambient: (0,0,0)
+      lambert: (200,200,200),
+      ambient: (200,200,200)
+    }
+}
+
+Plane {
+    point: (0, 3, 0)
+    normal: (0, -1, 0)
+    material: {
+      color: (150, 150, 150),
+      specular: (0,0,0),
+      lambert: (200,200,200),
+      ambient: (200,200,200)
+    }
+}
+
+Plane {
+    point: (0, 0, -4)
+    normal: (0, 0, 1)
+    material: {
+      color: (150, 150, 150),
+      specular: (0,0,0),
+      lambert: (200,200,200),
+      ambient: (200,200,200)
     }
 }
 
 Plane {
     point: (0, 0, 10)
-    normal: (0, 0, -1)
-    material: {
-      color: (0, 181, 226),
-      specular: (0,0,0),
-      lambert: (255,255,255),
-      ambient: (26,26,26),
-    }
-}
-
-Plane {
-    point: (0, 0, -10)
     normal: (0, 0, 1)
     material: {
-      color: (32, 178, 170),
-      specular: (0,0,0),
-      lambert: (255,255,255),
-      ambient: (26,26,26),
+      color: (150, 150, 150),
+      specular: (0, 0, 0),
+      lambert: (200, 200, 200),
+      ambient: (200, 200, 200)
     }
 }
 
 Plane {
-    point: (-5, 0, 0)
+    point: (-3, 0, 0)
     normal: (1, 0, 0)
     material: {
-      color: (32, 178, 170),
+      color: (200, 10, 10),
+      specular: (0, 0, 0),
+      lambert: (200, 200, 200),
+      ambient: (200, 200, 200)
+    }
+}
+
+Plane {
+    point: (3, 0, 0)
+    normal: (-1, 0, 0)
+    material: {
+      color: (10, 200, 10),
       specular: (0,0,0),
-      lambert: (255,255,255),
+      lambert: (200,200,200),
+      ambient: (200,200,200)
+    }
+}
+
+Sphere {
+    pos: (-2.3, -2.3, 6)
+    r: 0.7,
+    material: {
+      color: (90, 140, 160)
+      specular: (0, 0, 0)
+      lambert: (200, 200, 200)
+      ambient: (5, 5, 5)
+    }
+}
+
+Triangle {
+    t1: (0,  3,  10),
+    t2: (3, 3, 7),
+    t3: (3, -3, 10),
+    material: {
+      color: (100, 100, 100)
+      specular: (200, 200, 200)
+      lambert: (10,10,10)
       ambient: (0,0,0)
     }
 }
 
-Plane {
-    point: (5, 0, 0)
-    normal: (-1, 0, 0)
-    material: {
-      color: (32, 178, 170),
-      template: "bronze",
-    }
-}
-
-Plane {
-    point: (0, 10, 0)
-    normal: (0, -1, 0)
-    material: {
-      color: (32, 178, 170),
-      template: "bronze",
-    }
-}
-
 Sphere {
-    pos: (-2, 1, 5),
-    r: 1.5,
-    material: {
-      color: (200, 100, 100),
-      template: "bronze",
-    }
-}
-
-Sphere {
-    pos: (-0.6, 1, 6),
-    r: 1,
-    material: {
-      color: (200, 100, 100),
-      template: "bronze",
-    }
-}
-
-Sphere {
-    pos: (-4, 7, 9),
-    r: 3,
-    material: {
-      color: (80, 200, 100),
-      template: "bronze",
-    }
-}
-
-Sphere {
-    pos: (2, 2, 9),
+    pos: (-1, -1, 8)
     r: 2,
     material: {
-      color: (50, 80, 200),
-      template: "bronze"
+      color: (140, 160, 90)
+      specular: (255, 255, 255)
+      lambert: (0, 0, 0)
+      ambient: (0, 0, 0)
     }
 }
 
 Light {
-  pos: (0, 9, 8),
+  pos: (0, 1, 8),
   intensity: 1
 }

@@ -24,7 +24,7 @@ impl Color {
         Self { r, g, b }
     }
 
-    pub fn zero() -> Self {
+    pub const fn zero() -> Self {
         Self {
             r: 0.0,
             g: 0.0,
@@ -48,7 +48,7 @@ impl Color {
 impl std::ops::Add for Color {
     type Output = Self;
 
-    fn add(mut self, rhs: Self) -> Self::Output {
+    fn add(self, rhs: Self) -> Self::Output {
         Self {
             r: (self.r + rhs.r).min(1.0),
             g: (self.g + rhs.g).min(1.0),
@@ -84,6 +84,7 @@ impl From<Color> for [u8; 3] {
     }
 }
 
+#[derive(Debug, Clone, Copy)]
 pub enum ColorNames {
     // Base
     White,

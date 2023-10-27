@@ -4,7 +4,7 @@ mod scene_builder;
 mod scene_object;
 
 use lalrpop_util::ParseError;
-use raytrace_lib::Raytracer;
+use raytrace_lib::{Light, Object, Raytracer};
 
 #[macro_use]
 extern crate lalrpop_util;
@@ -15,7 +15,7 @@ lalrpop_mod!(
     scene
 );
 
-const DEFAULT_FOV: f64 = 90.0;
+const DEFAULT_FOV: f64 = 120.0;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ParseStringError {
@@ -39,11 +39,12 @@ impl std::fmt::Display for ParseStringError {
             Self::Annotated(error) => {
                 write!(f, "{error}")
             }
-            Self::Many(errors) => write!(
-                f,
-                "{}",
-                errors.iter().map(|e| format!("{e}\n")).collect::<String>()
-            ),
+            Self::Many(errors) => {
+                for e in errors {
+                    writeln!(f, "{e}")?
+                }
+                Ok(())
+            }
         }
     }
 }
@@ -136,7 +137,7 @@ impl SceneParseError {
     pub fn into_parse_string_error(self, input_string: &str) -> ParseStringError {
         let input_lines = &input_string.lines().collect::<Vec<_>>();
         match self {
-            SceneParseError::UnknownObject { start, ident, end } => {
+            Self::UnknownObject { start, ident, end } => {
                 let start = Location::new(start, input_string);
                 let end = Location::new(end, input_string);
                 ParseStringError::annotate(
@@ -146,7 +147,7 @@ impl SceneParseError {
                     format!("Unknown object '{ident}'"),
                 )
             }
-            SceneParseError::UnknownMaterial { start, name, end } => {
+            Self::UnknownMaterial { start, name, end } => {
                 let start = Location::new(start, input_string);
                 let end = Location::new(end, input_string);
                 ParseStringError::annotate(
@@ -156,7 +157,7 @@ impl SceneParseError {
                     format!("Unknown material '{name}'"),
                 )
             }
-            SceneParseError::UnknownColor { start, name, end } => {
+            Self::UnknownColor { start, name, end } => {
                 let start = Location::new(start, input_string);
                 let end = Location::new(end, input_string);
                 ParseStringError::annotate(
@@ -166,7 +167,7 @@ impl SceneParseError {
                     format!("Unknown color '{name}'"),
                 )
             }
-            SceneParseError::DuplicateKey { start, key } => {
+            Self::DuplicateKey { start, key } => {
                 let start = Location::new(start, input_string);
                 ParseStringError::annotate(
                     input_lines,
@@ -175,7 +176,7 @@ impl SceneParseError {
                     format!("Duplicate key '{key}' in object"),
                 )
             }
-            SceneParseError::MissingOption { start, name } => {
+            Self::MissingOption { start, name } => {
                 let start = Location::new(start, input_string);
                 ParseStringError::annotate(
                     input_lines,
@@ -184,7 +185,7 @@ impl SceneParseError {
                     format!("Missing option '{name}' in object"),
                 )
             }
-            SceneParseError::WrongType {
+            Self::WrongType {
                 start,
                 t,
                 expected,
@@ -200,7 +201,7 @@ impl SceneParseError {
                 )
             }
 
-            SceneParseError::UnknownOptions { idents } => ParseStringError::Many(
+            Self::UnknownOptions { idents } => ParseStringError::Many(
                 idents
                     .into_iter()
                     .map(|Ident { start, name, end }| {
@@ -216,7 +217,7 @@ impl SceneParseError {
                     })
                     .collect(),
             ),
-            SceneParseError::Custom { start, error, end } => {
+            Self::Custom { start, error, end } => {
                 let start = Location::new(start, input_string);
                 let end = end.map(|end| Location::new(end, input_string));
 
@@ -243,7 +244,7 @@ impl Ident {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Default)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub struct Location {
     line: usize,
     col: usize,
@@ -263,11 +264,11 @@ impl Location {
             }
         }
 
-        Self { loc, line, col }
+        Self { line, col, loc }
     }
 }
 
-pub fn parse_string(s: &str) -> Result<Raytracer, ParseStringError> {
+pub fn parse_string(s: &str) -> Result<(Vec<Object>, Vec<Light>, Raytracer), ParseStringError> {
     let source_lines = &s.lines().collect::<Vec<_>>();
 
     match scene::SceneParser::new().parse(s) {

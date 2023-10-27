@@ -1,14 +1,14 @@
 use crate::scene_object::{GlobalOptions, SceneObject};
 use crate::SceneParseError;
 
-use raytrace_lib::{Color, Raytracer, Object};
+use raytrace_lib::{Color, Light, Object, Raytracer};
 
 pub struct SceneBuilder;
 
 impl SceneBuilder {
     pub fn build(
         scene_objects: Vec<Result<SceneObject, SceneParseError>>,
-    ) -> Result<Raytracer, Vec<SceneParseError>> {
+    ) -> Result<(Vec<Object>, Vec<Light>, Raytracer), Vec<SceneParseError>> {
         let mut cameras = vec![];
         let mut objects = vec![];
         let mut lights = vec![];
@@ -52,12 +52,10 @@ impl SceneBuilder {
 
         // Checked length above
         if let Some(camera) = cameras.pop() {
-            Ok(Raytracer::new(
-                camera,
+            Ok((
                 objects,
                 lights,
-                Color::new(0, 0, 0),
-                options.recurse_depth.into(),
+                Raytracer::new(camera, Color::new(0, 0, 0), options.recurse_depth.into()),
             ))
         } else {
             unreachable!()

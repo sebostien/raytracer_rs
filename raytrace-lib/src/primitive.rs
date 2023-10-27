@@ -1,6 +1,6 @@
 use crate::{ray::Ray, vec3::Vec3, FLOAT_EPS};
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Intersection {
     /// The position of the intersection.
     pub pos: Vec3,
@@ -13,7 +13,7 @@ pub trait Intersectable {
     fn intersection(&self, ray: &Ray) -> Option<Intersection>;
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub enum Primitive {
     Sphere(Sphere),
     Triangle(Triangle),
@@ -31,7 +31,7 @@ impl Intersectable for Primitive {
 }
 
 /// An infinite plane described by a point and a normal.
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub struct Plane {
     point: Vec3,
     normal: Vec3,
@@ -39,13 +39,14 @@ pub struct Plane {
 
 impl Plane {
     pub fn new(point: Vec3, normal: Vec3) -> Self {
-        Plane {
+        Self{
             point,
             normal: normal.normalize(),
         }
     }
 
     /// Return a plane from the Cartesian equation `ax + by + cz + d = 0`.
+    #[allow(unused)]
     fn from_cartesian(a: f64, b: f64, c: f64, d: f64) -> Self {
         // ax + by + cz + d = 0    (x=0, y=0)
         // z = - d / c
@@ -62,7 +63,7 @@ impl From<Plane> for Primitive {
 impl Intersectable for Plane {
     fn intersection(&self, ray: &Ray) -> Option<Intersection> {
         // Implemented from the wikipedia page about line-plane intersections.
-        // https://en.wikipedia.org/wiki/Line%E2%80%93plane_intersection#Algebraic_form>
+        // <https://en.wikipedia.org/wiki/Line%E2%80%93plane_intersection#Algebraic_form>
 
         let normal = self.normal;
         let plane_point = self.point;
@@ -79,7 +80,6 @@ impl Intersectable for Plane {
         let d = (plane_point - ray_origin).dot(normal.to_owned()) / dir_dot_normal;
 
         // Intersection behind the ray origin
-        // TODO: Test value either 0.0 or this
         if d < FLOAT_EPS {
             return None;
         }
@@ -94,7 +94,7 @@ impl Intersectable for Plane {
 /// A triangle in 3d-space.
 ///
 /// The three vectors makes up each corner of the triangle.
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub struct Triangle {
     pub t1: Vec3,
     pub t2: Vec3,
@@ -164,7 +164,7 @@ impl Intersectable for Triangle {
         let distance = f * self.l13.dot(q);
 
         // Intersection behind ray origin
-        if (distance < FLOAT_EPS) {
+        if distance < FLOAT_EPS {
             return None;
         }
 
@@ -179,7 +179,7 @@ impl Intersectable for Triangle {
 /// A triangle in 3d-space.
 ///
 /// The three vectors makes up each corner of the triangle.
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub struct Sphere {
     pub center: Vec3,
     pub radius: f64,
@@ -199,7 +199,7 @@ impl From<Sphere> for Primitive {
 
 impl Intersectable for Sphere {
     fn intersection(&self, ray: &Ray) -> Option<Intersection> {
-        // From: <https://en.wikipedia.org/wiki/Line%E2%80%93sphere_intersection#Calculation_using_vectors_in_3D>
+        // From: <https://www.scratchapixel.com/lessons/3d-basic-rendering/minimal-ray-tracer-rendering-simple-shapes/ray-sphere-intersection.html>
         // Where the direction of the ray is a unit vector.
 
         // Sanity check. Ray should guarantee this.
@@ -210,39 +210,52 @@ impl Intersectable for Sphere {
             ray.direction().length()
         );
 
-        let c = self.center;
+        let dir = *ray.direction();
         let r = self.radius;
 
-        let o = ray.origin;
-        let u = *ray.direction();
+        let l = ray.origin - self.center;
+        let a = dir.dot(dir);
+        let b = dir.dot(l) * 2.0;
+        let c = l.dot(l) - r * r;
 
-        let oc = o - c;
-        let c = oc.dot(oc) - r * r;
+        let discr = b * b - 4.0 * a * c;
 
-        let uoc = u.dot(oc);
-        let intersect = uoc * uoc - c;
+        let (t0, t1) = match (discr < -FLOAT_EPS, discr < FLOAT_EPS) {
+            (true, _) => {
+                // < 0    No intersection
+                return None;
+            }
+            (_, true) => {
+                // == 0   One intersection
+                let t = -0.5 * b / a;
+                (t, t)
+            }
+            _ => {
+                // > 0    Two intersections
+                let x = if b > 0.0 {
+                    b + discr.sqrt()
+                } else {
+                    b - discr.sqrt()
+                };
 
-        if intersect < -FLOAT_EPS {
-            // <  0 = no intersection
-            return None;
-        }
+                let q = -0.5 * x;
+                (q / a, c / q)
+            }
+        };
 
-        let intersect = intersect.sqrt();
-        let t1 = -uoc - intersect;
-        let t2 = -uoc + intersect;
-
-        // Find minimum but not negative
-        let distance = match (t1 < -FLOAT_EPS, t2 < -FLOAT_EPS) {
+        // Minimum but not negative
+        let t = match (t0 < 0.0, t1 < 0.0) {
             (true, true) => {
                 return None;
             }
-            (true, _) => t2,
-            (_, true) => t1,
-            _ => t1.min(t2),
+            (true, _) => t1,
+            (_, true) => t0,
+            _ => t0.min(t1),
         };
 
-        let pos = o + (u.to_owned() * distance);
-        let normal = (pos - self.center).normalize();
+        let pos = ray.origin + dir * t;
+        let normal = pos - self.center;
+
         Some(Intersection { pos, normal })
     }
 }

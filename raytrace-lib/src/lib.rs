@@ -1,7 +1,5 @@
 //! A simple raytracer.
 
-#![allow(unused)]
-
 pub mod camera;
 pub mod color;
 pub mod light;
@@ -19,13 +17,13 @@ pub use material::Material;
 pub use object::Object;
 pub use vec3::Vec3;
 
-use primitive::{Plane, Sphere};
-use primitive::{Primitive, Triangle};
+use primitive::Primitive;
 use ray::{Ray, RayHit};
 use rotation::Rotation;
 
-use std::f64::consts::PI;
-use std::io::Write;
+use std::sync::mpsc::channel;
+use std::sync::Arc;
+use threadpool::ThreadPool;
 
 pub enum SceneObject {
     Camera(Camera),
@@ -35,9 +33,6 @@ pub enum SceneObject {
 
 /// Precision of comparisons.
 pub const FLOAT_EPS: f64 = 0.000001;
-
-/// Distance in meters from camera to viewport.
-const VIEWPORT_DISTANCE: f64 = 1.0;
 
 /// The direction of “up”.
 const UP_DIRECTION: Vec3 = Vec3 {
@@ -49,24 +44,14 @@ const UP_DIRECTION: Vec3 = Vec3 {
 #[derive(Debug)]
 pub struct Raytracer {
     camera: Camera,
-    world: Vec<Object>,
-    lights: Vec<Light>,
     background_color: Color,
     recurse_depth: i64,
 }
 
 impl Raytracer {
-    pub fn new(
-        camera: Camera,
-        world: Vec<Object>,
-        lights: Vec<Light>,
-        background_color: Color,
-        recurse_depth: i64,
-    ) -> Self {
+    pub fn new(camera: Camera, background_color: Color, recurse_depth: i64) -> Self {
         Self {
             camera,
-            world,
-            lights,
             background_color,
             recurse_depth,
         }
@@ -81,18 +66,18 @@ impl Raytracer {
     }
 
     pub fn set_recurse_depth(&mut self, depth: u32) {
-        self.recurse_depth = depth as i64;
+        self.recurse_depth = i64::from(depth);
     }
 }
 
 impl Raytracer {
     /// Return the position of any visible lights together with their intensity.
-    fn trace_to_lights(&self, pos: Vec3) -> Vec<(Vec3, f64)> {
+    fn trace_to_lights(world: &[Object], lights: &[Light], pos: Vec3) -> Vec<(Vec3, f64)> {
         let mut visible = vec![];
 
-        for light in &self.lights {
+        for light in lights.iter() {
             let ray = Ray::new(pos, pos - light.pos);
-            for object in &self.world {
+            for object in world.iter() {
                 if ray.trace(object).is_none() {
                     visible.push((light.pos, light.intensity));
                 }
@@ -106,7 +91,8 @@ impl Raytracer {
     /// and the light direction.
     /// <https://en.wikipedia.org/wiki/Lambertian_reflectance>
     fn lambertian(
-        &self,
+        world: &[Object],
+        lights: &[Light],
         material: &Material,
         intersection_pos: Vec3,
         intersection_normal: Vec3,
@@ -117,7 +103,8 @@ impl Raytracer {
 
         let mut brightness = 0.0;
         // TODO: Support multiple lights
-        if let Some(&(light_pos, light_intensity)) = self.trace_to_lights(intersection_pos).first()
+        if let Some(&(light_pos, light_intensity)) =
+            Self::trace_to_lights(world, lights, intersection_pos).first()
         {
             let contribution = intersection_pos
                 .direction_to(light_pos)
@@ -136,7 +123,8 @@ impl Raytracer {
     /// Reflect
     /// <https://en.wikipedia.org/wiki/Specular_reflection>
     fn specular(
-        &self,
+        world: &[Object],
+        lights: &[Light],
         material: &Material,
         intersection_pos: Vec3,
         intersection_normal: Vec3,
@@ -149,35 +137,50 @@ impl Raytracer {
         let reflected_dir = intersection_pos.reflect(intersection_normal);
         let new_ray = Ray::new(intersection_pos, reflected_dir);
 
-        self.trace(new_ray, depth - 1)
+        Self::trace(world, lights, new_ray, depth - 1)
             .map(|c| c * material.specular)
             .unwrap_or(Color::zero())
     }
 
     fn shading(
-        &self,
+        world: &[Object],
+        lights: &[Light],
         material: &Material,
         intersection_pos: Vec3,
         intersection_normal: Vec3,
         depth: i64,
     ) -> Color {
-        let color =
-            material.color * self.lambertian(material, intersection_pos, intersection_normal);
+        let color = material.color
+            * Self::lambertian(
+                world,
+                lights,
+                material,
+                intersection_pos,
+                intersection_normal,
+            );
 
-        let color = color + self.specular(material, intersection_pos, intersection_normal, depth);
+        let color = color
+            + Self::specular(
+                world,
+                lights,
+                material,
+                intersection_pos,
+                intersection_normal,
+                depth,
+            );
 
         color + material.color * material.ambient
     }
 
     /// Raycast from point with recursion level equal to `depth`.
-    fn trace(&self, ray: Ray, depth: i64) -> Option<Color> {
+    fn trace(world: &[Object], lights: &[Light], ray: Ray, depth: i64) -> Option<Color> {
         if depth <= 0 {
             return None;
         }
 
         let mut hit: Option<(f64, RayHit, &Object)> = None;
 
-        for object in &self.world {
+        for object in world.iter() {
             if let Some(ray_hit) = ray.trace(object) {
                 // Set minimum lambda as min of previous and this
                 let dist = ray_hit.intersection.length_squared();
@@ -192,7 +195,9 @@ impl Raytracer {
         }
 
         if let Some((_, ray_hit, object)) = hit {
-            let color = self.shading(
+            let color = Self::shading(
+                world,
+                lights,
                 &object.material,
                 ray_hit.intersection,
                 ray_hit.normal,
@@ -203,22 +208,65 @@ impl Raytracer {
             None
         }
     }
+}
 
+impl Raytracer {
     /// Returns the colors for each ray.
     /// Ordered by row then column.
-    pub fn raycast(&self) -> Vec<Vec<Color>> {
+    /// Traces using multiple threads.
+    pub fn par_raycast(
+        &self,
+        num_threads: usize,
+        world: Arc<[Object]>,
+        lights: Arc<[Light]>,
+    ) -> Vec<Vec<Color>> {
         let (px, py) = self.camera.pixels();
 
         let mut image = vec![vec![self.background_color; px as usize]; py as usize];
 
-        for (row, img_row) in image.iter_mut().enumerate() {
-            let y = row as f64;
-            for (col, img_cell) in img_row.iter_mut().enumerate() {
-                let x = col as f64;
-                let ray = self.camera.ray_from_pixel(x, y);
+        let px = i64::from(px);
+        let py = i64::from(py);
 
-                if let Some(color) = self.trace(ray, self.recurse_depth) {
-                    *img_cell = color;
+        let pool = ThreadPool::new(num_threads);
+
+        let (tx, rx) = channel();
+        let depth = self.recurse_depth;
+        for (row, y) in (-py..0).enumerate() {
+            for (col, x) in (-px / 2..px / 2).enumerate() {
+                let tx = tx.clone();
+                let world = world.clone();
+                let lights = lights.clone();
+                let ray = self.camera.ray_from_pixel(x as f64, -y as f64);
+                pool.execute(move || {
+                    if let Some(hit) = Self::trace(world.as_ref(), lights.as_ref(), ray, depth) {
+                        tx.send((row, col, hit)).expect("Unable to send hit!");
+                    }
+                });
+            }
+        }
+
+        for (row, col, color) in rx.iter().take((px * py) as usize) {
+            image[row][col] = color;
+        }
+
+        image
+    }
+
+    /// Returns the colors for each ray.
+    /// Ordered by row then column.
+    pub fn raycast(&self, world: &[Object], lights: &[Light]) -> Vec<Vec<Color>> {
+        let (px, py) = self.camera.pixels();
+
+        let mut image = vec![vec![self.background_color; px as usize]; py as usize];
+
+        let px = i64::from(px);
+        let py = i64::from(py);
+
+        for (row, y) in (-py..0).enumerate() {
+            for (col, x) in (-px / 2..px / 2).enumerate() {
+                let ray = self.camera.ray_from_pixel(x as f64, -y as f64);
+                if let Some(hit) = Self::trace(world, lights, ray, self.recurse_depth) {
+                    image[row][col] = hit;
                 }
             }
         }
