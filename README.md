@@ -2,7 +2,7 @@
 
 A simple [ray tracer][ray_wiki] written in rust.
 
-The code for the ray tracing algorithm is found in [raytracer](./raytrace-lib/).
+The code for the ray tracing algorithm is found in [raytrace-lib](./raytrace-lib/).
 
 To specify scenes the program uses a custom DSL parsed by the
 module [scene_parser](./scene-parser/).
