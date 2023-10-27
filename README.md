@@ -12,7 +12,7 @@ Some examples of this are found in the [scenes](./scenes/) folder.
 
 ## Usage
 
-Run on an example with parallel:
+Run an example with the parallel algorithm:
 
 ```sh
 cargo build --release
