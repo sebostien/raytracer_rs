@@ -32,7 +32,7 @@ pub enum SceneObject {
 }
 
 /// Precision of comparisons.
-pub const FLOAT_EPS: f64 = 0.000001;
+pub const FLOAT_EPS: f64 = 0.00000001;
 
 /// The direction of “up”.
 const UP_DIRECTION: Vec3 = Vec3 {
@@ -44,15 +44,13 @@ const UP_DIRECTION: Vec3 = Vec3 {
 #[derive(Debug)]
 pub struct Raytracer {
     camera: Camera,
-    background_color: Color,
-    recurse_depth: i64,
+    recurse_depth: u32,
 }
 
 impl Raytracer {
-    pub fn new(camera: Camera, background_color: Color, recurse_depth: i64) -> Self {
+    pub fn new(camera: Camera, recurse_depth: u32) -> Self {
         Self {
             camera,
-            background_color,
             recurse_depth,
         }
     }
@@ -66,7 +64,7 @@ impl Raytracer {
     }
 
     pub fn set_recurse_depth(&mut self, depth: u32) {
-        self.recurse_depth = i64::from(depth);
+        self.recurse_depth = depth;
     }
 }
 
@@ -128,16 +126,16 @@ impl Raytracer {
         material: &Material,
         intersection_pos: Vec3,
         intersection_normal: Vec3,
-        depth: i64,
+        depth: u32,
     ) -> Color {
         if material.specular.is_zero() {
             return Color::zero();
         }
 
-        let reflected_dir = intersection_pos.reflect(intersection_normal);
+        let reflected_dir = intersection_pos.normalize().reflect(intersection_normal);
         let new_ray = Ray::new(intersection_pos, reflected_dir);
 
-        Self::trace(world, lights, new_ray, depth - 1)
+        Self::trace(world, lights, new_ray, depth.saturating_sub(1))
             .map(|c| c * material.specular)
             .unwrap_or(Color::zero())
     }
@@ -148,8 +146,10 @@ impl Raytracer {
         material: &Material,
         intersection_pos: Vec3,
         intersection_normal: Vec3,
-        depth: i64,
+        depth: u32,
     ) -> Color {
+        debug_assert!(intersection_normal.is_unit());
+
         let color = material.color
             * Self::lambertian(
                 world,
@@ -173,8 +173,8 @@ impl Raytracer {
     }
 
     /// Raycast from point with recursion level equal to `depth`.
-    fn trace(world: &[Object], lights: &[Light], ray: Ray, depth: i64) -> Option<Color> {
-        if depth <= 0 {
+    fn trace(world: &[Object], lights: &[Light], ray: Ray, depth: u32) -> Option<Color> {
+        if depth == 0 {
             return None;
         }
 
@@ -201,7 +201,7 @@ impl Raytracer {
                 &object.material,
                 ray_hit.intersection,
                 ray_hit.normal,
-                depth - 1,
+                depth,
             );
             Some(color)
         } else {
@@ -222,7 +222,7 @@ impl Raytracer {
     ) -> Vec<Vec<Color>> {
         let (px, py) = self.camera.pixels();
 
-        let mut image = vec![vec![self.background_color; px as usize]; py as usize];
+        let mut image = vec![vec![Color::zero(); px as usize]; py as usize];
 
         let px = i64::from(px);
         let py = i64::from(py);
@@ -257,7 +257,7 @@ impl Raytracer {
     pub fn raycast(&self, world: &[Object], lights: &[Light]) -> Vec<Vec<Color>> {
         let (px, py) = self.camera.pixels();
 
-        let mut image = vec![vec![self.background_color; px as usize]; py as usize];
+        let mut image = vec![vec![Color::zero(); px as usize]; py as usize];
 
         let px = i64::from(px);
         let py = i64::from(py);

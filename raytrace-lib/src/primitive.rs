@@ -39,15 +39,14 @@ pub struct Plane {
 
 impl Plane {
     pub fn new(point: Vec3, normal: Vec3) -> Self {
-        Self{
+        Self {
             point,
             normal: normal.normalize(),
         }
     }
 
     /// Return a plane from the Cartesian equation `ax + by + cz + d = 0`.
-    #[allow(unused)]
-    fn from_cartesian(a: f64, b: f64, c: f64, d: f64) -> Self {
+    pub fn from_cartesian(a: f64, b: f64, c: f64, d: f64) -> Self {
         // ax + by + cz + d = 0    (x=0, y=0)
         // z = - d / c
         Self::new(Vec3::new(0.0, 0.0, -d / c), Vec3::new(a, b, c))
@@ -65,19 +64,20 @@ impl Intersectable for Plane {
         // Implemented from the wikipedia page about line-plane intersections.
         // <https://en.wikipedia.org/wiki/Line%E2%80%93plane_intersection#Algebraic_form>
 
-        let normal = self.normal;
-        let plane_point = self.point;
-        let ray_origin = ray.origin;
-        let ray_dir = ray.direction();
+        let n = self.normal;
+        let p0 = self.point;
 
-        let dir_dot_normal = ray_dir.dot(normal);
+        let l0 = ray.origin;
+        let l = ray.direction();
 
-        // Line and plane are parallel
-        if dir_dot_normal.abs() < FLOAT_EPS {
+        let ln = l.dot(n);
+
+        // == 0, line and plane are parallel
+        if ln.abs() < FLOAT_EPS {
             return None;
         }
 
-        let d = (plane_point - ray_origin).dot(normal.to_owned()) / dir_dot_normal;
+        let d = (p0 - l0).dot(n) / ln;
 
         // Intersection behind the ray origin
         if d < FLOAT_EPS {
@@ -85,8 +85,8 @@ impl Intersectable for Plane {
         }
 
         Some(Intersection {
-            pos: ray_origin + (*ray_dir * d),
-            normal,
+            pos: l0 + (l * d),
+            normal: n,
         })
     }
 }
@@ -112,7 +112,7 @@ impl Triangle {
         // Perpendicular to the plane of the triangle
         let l12 = t2 - t1;
         let l13 = t3 - t1;
-        let normal = l12.cross(l13);
+        let normal = l12.cross(l13).normalize();
         Self {
             t1,
             t2,
@@ -134,7 +134,7 @@ impl Intersectable for Triangle {
     fn intersection(&self, ray: &Ray) -> Option<Intersection> {
         // The Möller–Trumbore intersection algorithm.
         // <https://en.wikipedia.org/wiki/M%C3%B6ller%E2%80%93Trumbore_intersection_algorithm>
-        let ray_dir = *ray.direction();
+        let ray_dir = ray.direction();
         let ray_origin = ray.origin;
 
         let h = ray_dir.cross(self.l13);
@@ -210,7 +210,7 @@ impl Intersectable for Sphere {
             ray.direction().length()
         );
 
-        let dir = *ray.direction();
+        let dir = ray.direction();
         let r = self.radius;
 
         let l = ray.origin - self.center;
@@ -220,7 +220,7 @@ impl Intersectable for Sphere {
 
         let discr = b * b - 4.0 * a * c;
 
-        let (t0, t1) = match (discr < -FLOAT_EPS, discr < FLOAT_EPS) {
+        let (t0, t1) = match (discr < -0.0, discr < FLOAT_EPS) {
             (true, _) => {
                 // < 0    No intersection
                 return None;
@@ -254,7 +254,7 @@ impl Intersectable for Sphere {
         };
 
         let pos = ray.origin + dir * t;
-        let normal = pos - self.center;
+        let normal = (pos - self.center).normalize();
 
         Some(Intersection { pos, normal })
     }

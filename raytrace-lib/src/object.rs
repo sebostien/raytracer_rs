@@ -4,7 +4,7 @@ use crate::{
     ray::Ray,
 };
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone)]
 pub struct Object {
     pub primitive: Primitive,
     pub material: Material,

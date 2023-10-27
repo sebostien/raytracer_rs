@@ -86,6 +86,7 @@ impl SpannedLit {
         }
     }
 
+
     pub fn get_string(&self) -> Result<String, SceneParseError> {
         match &self.lit {
             Lit::String(s) => Ok(s[1..s.len() - 1].to_string()),
@@ -98,6 +99,7 @@ impl SpannedLit {
         }
     }
 
+    // TODO: Use a macro for all get_{number}
     pub fn get_double(&self) -> Result<f64, SceneParseError> {
         match self.lit {
             Lit::Double(d) => Ok(d),

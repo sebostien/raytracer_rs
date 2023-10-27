@@ -1,7 +1,7 @@
 use crate::scene_object::{GlobalOptions, SceneObject};
 use crate::SceneParseError;
 
-use raytrace_lib::{Color, Light, Object, Raytracer};
+use raytrace_lib::{Light, Object, Raytracer};
 
 pub struct SceneBuilder;
 
@@ -55,7 +55,7 @@ impl SceneBuilder {
             Ok((
                 objects,
                 lights,
-                Raytracer::new(camera, Color::new(0, 0, 0), options.recurse_depth.into()),
+                Raytracer::new(camera, options.recurse_depth),
             ))
         } else {
             unreachable!()

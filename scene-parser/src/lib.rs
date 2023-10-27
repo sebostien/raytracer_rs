@@ -50,7 +50,7 @@ impl std::fmt::Display for ParseStringError {
 }
 
 impl ParseStringError {
-    /// Annotate error like cargo.
+    /// Annotate errors like cargo.
     fn annotate(
         source_lines: &[&str],
         start: &Location,

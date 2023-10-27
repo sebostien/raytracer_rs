@@ -1,7 +1,7 @@
 use crate::{rotation::Rotation, FLOAT_EPS};
 
 /// Vector in 3d-space.
-#[derive(Debug,Default, Clone, Copy)]
+#[derive(Debug, Default, Clone, Copy)]
 pub struct Vec3 {
     /// The x-component of the vector.
     pub x: f64,
@@ -82,7 +82,7 @@ impl Vec3 {
 
     /// Returns a normalized vector that points from `self` to `other`.
     #[must_use]
-    pub fn direction_to(self, other: Self) -> Self{
+    pub fn direction_to(self, other: Self) -> Self {
         (other - self).normalize()
     }
 
@@ -91,7 +91,8 @@ impl Vec3 {
     ///
     /// <https://en.wikipedia.org/wiki/Specular_reflection#Vector_formulation>
     #[must_use]
-    pub fn reflect(self, normal: Self) -> Self{
+    pub fn reflect(self, normal: Self) -> Self {
+        debug_assert!(self.is_unit() && normal.is_unit());
         self - 2.0 * normal * normal.dot(self)
     }
 

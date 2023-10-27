@@ -33,8 +33,8 @@ impl Ray {
         }
     }
 
-    pub fn direction(&self) -> &Vec3 {
-        &self.dir
+    pub fn direction(&self) -> Vec3 {
+        self.dir
     }
 
     pub fn trace(&self, object: &Object) -> Option<RayHit> {

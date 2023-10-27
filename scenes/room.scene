@@ -1,6 +1,6 @@
 Camera {
-  width: 4096,
-  height: 4096,
+  width: 512,
+  height: 512,
   pos: (0, 0, -3),
   dir: (0, 0, 1),
 }
@@ -12,7 +12,7 @@ Plane {
       color: (150, 150, 150),
       specular: (0,0,0),
       lambert: (200,200,200),
-      ambient: (200,200,200)
+      ambient: (10,10,10)
     }
 }
 
@@ -23,7 +23,7 @@ Plane {
       color: (150, 150, 150),
       specular: (0,0,0),
       lambert: (200,200,200),
-      ambient: (200,200,200)
+      ambient: (100,100,100)
     }
 }
 
@@ -34,7 +34,7 @@ Plane {
       color: (150, 150, 150),
       specular: (0,0,0),
       lambert: (200,200,200),
-      ambient: (200,200,200)
+      ambient: (100,100,100)
     }
 }
 
@@ -45,7 +45,7 @@ Plane {
       color: (150, 150, 150),
       specular: (0, 0, 0),
       lambert: (200, 200, 200),
-      ambient: (200, 200, 200)
+      ambient: (100, 100, 100)
     }
 }
 
@@ -56,7 +56,7 @@ Plane {
       color: (200, 10, 10),
       specular: (0, 0, 0),
       lambert: (200, 200, 200),
-      ambient: (200, 200, 200)
+      ambient: (100, 100, 100)
     }
 }
 
@@ -67,45 +67,56 @@ Plane {
       color: (10, 200, 10),
       specular: (0,0,0),
       lambert: (200,200,200),
-      ambient: (200,200,200)
+      ambient: (100,100,100)
     }
 }
 
 Sphere {
-    pos: (-2.3, -2.3, 6)
+    pos: (-2.3, -2.3, 8)
     r: 0.7,
     material: {
       color: (90, 140, 160)
       specular: (0, 0, 0)
       lambert: (200, 200, 200)
-      ambient: (5, 5, 5)
+      ambient: (80, 80, 80)
     }
 }
 
 Triangle {
-    t1: (0,  3,  10),
-    t2: (3, 3, 7),
-    t3: (3, -3, 10),
+    t1: (-3,3,5)
+    t2: (-3,1,10)
+    t3: (3,3,10)
     material: {
-      color: (100, 100, 100)
-      specular: (200, 200, 200)
-      lambert: (10,10,10)
-      ambient: (0,0,0)
+        color: (100, 100, 200)
+        specular: (255, 255, 255)
+        lambert: (10, 10, 10)
+        ambient: (10, 10, 10)
     }
 }
 
 Sphere {
-    pos: (-1, -1, 8)
-    r: 2,
+    pos: (0.7, -3, 9)
+    r: 1,
     material: {
       color: (140, 160, 90)
-      specular: (255, 255, 255)
-      lambert: (0, 0, 0)
-      ambient: (0, 0, 0)
+      specular: (0, 0, 0)
+      lambert: (200, 200, 200)
+      ambient: (80, 80, 80)
+    }
+}
+
+Sphere {
+    pos: (-1, 0, 8)
+    r: 0.5,
+    material: {
+      color: (100, 200, 200)
+      specular: (0, 0, 0)
+      lambert: (200, 200, 200)
+      ambient: (80, 80, 80)
     }
 }
 
 Light {
   pos: (0, 1, 8),
-  intensity: 1
+  intensity: 0.9
 }
